@@ -121,7 +121,13 @@ class Status(object):
         self.yumbase.preconf.init_plugins = is_root
         self.yumbase.conf.cache = not(is_root)
 
-        self.defaults = Status.load_defaults(yadt_default_filename)
+        #self.defaults = Status.load_defaults(yadt_default_filename)
+        self.defaults = {
+            'YADT_ARTEFACT_FILTER': '.*',
+            'YADT_SERVICES_FILE': 'res/yadt.services.dummy',
+            'YADT_YUM_COMMAND': 'yum',
+            'YADT_LOCK_DIR': '/var/lock/yadt'
+        }
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         yadt_services_filename = self.defaults.get('YADT_SERVICES_FILE')
@@ -195,8 +201,11 @@ class Status(object):
             if interface == 'lo':
                 continue
             self.interface[interface] = []
-            for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                self.interface[interface].append(link['addr'])
+            try:
+                for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+                    self.interface[interface].append(link['addr'])
+            except:
+                pass
             self.interface[interface] = ' '.join(self.interface[interface])
 
         self.pwd = os.getcwd()
