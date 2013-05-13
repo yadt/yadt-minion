@@ -125,15 +125,20 @@ class Status(object):
         self.defaults = {
             'YADT_ARTEFACT_FILTER': '.*',
             'YADT_SERVICES_FILE': 'res/yadt.services.dummy',
-            'YADT_YUM_COMMAND': 'yum',
+            'YADT_YUM_COMMAND': 'sudo',
             'YADT_LOCK_DIR': '/var/lock/yadt'
         }
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         yadt_services_filename = self.defaults.get('YADT_SERVICES_FILE')
-        file = open(yadt_services_filename)
-        self.service_defs = yaml.load(file)
-        file.close()
+        try:
+            file = open(os.path.join(os.getcwd(), yadt_services_filename), 'r')
+            self.service_defs = yaml.load(file)
+            file.close()
+        except IOError, e:
+            self.service_defs = set()
+            print >> sys.stderr, 'cannot find %s, skipping service handling' % yadt_services_filename
+            print >> sys.stderr, e
 
         self.lockstate = self.get_lock_state()
 
@@ -181,7 +186,7 @@ class Status(object):
         if len(self.next_artefacts) == 0:
             self.next_artefacts = None
 
-        if len(self.updates) > 0:
+        if len(self.updates):
             self.state = 'update_needed'
         else:
             self.state = 'uptodate'
@@ -234,7 +239,7 @@ class Status(object):
             cmds = [init_script, 'status']
             if self.defaults.get('YADT_YUM_COMMAND'):
                 cmds = [self.defaults.get('YADT_YUM_COMMAND')] + cmds
-            p = subprocess.Popen(cmds)
+            p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
             p.wait()
             service['state'] = p.returncode
 
