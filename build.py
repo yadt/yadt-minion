@@ -52,6 +52,8 @@ def set_properties(project):
     project.get_property('copy_resources_glob').append('setup.cfg')
     project.set_property('dir_dist_scripts', 'scripts')
 
+    project.set_property("integrationtest_inherit_environment", True)
+
     project.get_property('distutils_commands').append('bdist_egg')
     project.set_property('distutils_classifiers', [
         'Development Status :: 4 - Beta',
