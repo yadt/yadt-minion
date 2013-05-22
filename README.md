@@ -1,3 +1,5 @@
+# yadt-minion [![Build Status](https://travis-ci.org/yadt/yadt-minion.png?branch=master)](https://travis-ci.org/yadt/yadt-minion)
+
 yadt-minion
 ===========
 
