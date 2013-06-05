@@ -27,7 +27,7 @@ use_plugin('copy_resources')
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com')]
 description = """YADT - an Augmented Deployment Tool - The Minion Part
-- yadt-status: collects all relevant information for a single hostexpand
+- yadt-status: collects all relevant information for a single host
 
 for more documentation, visit http://www.yadt-project.org/
 """
@@ -36,7 +36,7 @@ name = 'yadt-minion'
 license = 'GNU GPL v3'
 summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
-version = '0.1'
+version = '0.2'
 
 default_task = ['publish']
 
