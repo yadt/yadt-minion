@@ -288,5 +288,6 @@ class Status(object):
 if __name__ == '__main__':
     ys = Status()
 
-    print yaml.dump(ys.get_status(), default_flow_style=False)
+    import json
+    print json.dumps(ys.get_status())
 
