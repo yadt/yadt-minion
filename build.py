@@ -45,6 +45,7 @@ default_task = ['publish']
 def set_properties(project):
     project.depends_on('PyYAML')
     project.depends_on('netifaces')
+    project.depends_on('simplejson')
     project.depends_on('pyrpm')
 
     project.set_property('copy_resources_target', '$dir_dist')
