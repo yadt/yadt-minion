@@ -196,7 +196,7 @@ class Status(object):
         else:
             self.state = 'uptodate'
 
-        self.hostname = socket.gethostname()
+        self.host = self.hostname = socket.gethostname().split('.', 1)[0]
         self.fqdn = socket.getfqdn()
         f = open('/proc/uptime', 'r')
         self.uptime = float(f.readline().split()[0])
