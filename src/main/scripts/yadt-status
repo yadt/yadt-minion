@@ -8,15 +8,11 @@ import socket
 import datetime
 import stat
 
-import json
+import simplejson as json
 import netifaces
 import yaml
 import yum
 
-try:
-    json_dumps = json.dumps
-except:
-    json_dumps = json.write
 
 class YumDeps(object):
     NAME_VERSION_SEPARATOR = '/'
@@ -293,5 +289,5 @@ class Status(object):
 if __name__ == '__main__':
     ys = Status()
 
-    print json_dumps(ys.get_status())
+    print json.dumps(ys.get_status())
 
