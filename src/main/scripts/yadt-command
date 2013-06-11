@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import subprocess
+import sys
+import select
+
+args = sys.argv[1:]
+
+if not args:
+    sys.stderr.write("%s: no command given?!\n" % sys.argv[0])
+    sys.exit(1)
+
+p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+while True:
+    reads = [p.stdout.fileno(), p.stderr.fileno()]
+    ret = select.select(reads, [], [])
+
+    for fd in ret[0]:
+        if fd == p.stdout.fileno():
+            sys.stdout.write(p.stdout.readline())
+        if fd == p.stderr.fileno():
+            sys.stderr.write(p.stderr.readline())
+
+    if p.poll() != None:
+        break
+
+print "return code: %i" % p.returncode
