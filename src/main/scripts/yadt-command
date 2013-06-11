@@ -4,25 +4,41 @@ import subprocess
 import sys
 import select
 
-args = sys.argv[1:]
 
-if not args:
-    sys.stderr.write("%s: no command given?!\n" % sys.argv[0])
-    sys.exit(1)
+def flush(froom, tos):
+    while True:
+        line = froom.readline()
+        if not line:
+            break
+        handle_line(line, tos)
 
-p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def handle_line(line, tos):
+    for to in tos:
+        to.write(line)
 
-while True:
-    reads = [p.stdout.fileno(), p.stderr.fileno()]
-    ret = select.select(reads, [], [])
+def cmd(args):
+    if not args:
+        sys.stderr.write("no command given?!\n")
+        sys.exit(1)
 
-    for fd in ret[0]:
-        if fd == p.stdout.fileno():
-            sys.stdout.write(p.stdout.readline())
-        if fd == p.stderr.fileno():
-            sys.stderr.write(p.stderr.readline())
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    if p.poll() != None:
-        break
+    while True:
+        reads = [p.stdout.fileno(), p.stderr.fileno()]
+        ret = select.select(reads, [], [])
 
-print "return code: %i" % p.returncode
+        for fd in ret[0]:
+            if fd == p.stdout.fileno():
+                handle_line(p.stdout.readline(), [sys.stdout])
+            if fd == p.stderr.fileno():
+                handle_line(p.stderr.readline(), [sys.stderr])
+
+        if p.poll() != None:
+            flush(p.stdout, [sys.stdout])
+            flush(p.stderr, [sys.stderr])
+            break
+
+    print "return code: %i" % p.returncode
+
+if __name__ == '__main__':
+    cmd(['find', '/tmp'])
