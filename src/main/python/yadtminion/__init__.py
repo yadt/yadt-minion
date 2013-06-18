@@ -113,6 +113,41 @@ class YumDeps(object):
 
 
 class Status(object):
+    def load_services_oldstyle(self, filename):
+        with open(filename) as f:
+            service_defs = yaml.load(f)
+        services = {}
+        for service_def in service_defs:
+            try:
+                name = service_def.keys()[0]
+                service = service_def.get(name)
+                if not service:
+                    service = {}
+                service['name'] = name
+                services[name] = service
+            except BaseException, e:
+                print >> sys.stderr, e
+        return services
+
+
+    def load_services(self, d):
+        try:
+            services = {}
+            lines = []
+            for filename in os.listdir(d):
+                with open(os.path.join(d, filename)) as f:
+                    lines.extend(f.readlines())
+            service_defs = yaml.load(''.join(lines))
+            for name, service in service_defs.iteritems():
+                if not service:
+                    service = {}
+                service['name'] = name
+                services[name] = service
+            return services
+        except BaseException, e:
+            print >> sys.stderr, e
+        return {}
+
     def __init__(self):
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
@@ -122,29 +157,21 @@ class Status(object):
         self.defaults = Status.load_defaults()
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
-        yadt_services_filename = self.defaults.get('YADT_SERVICES_FILE')
-        try:
-            file = open(os.path.join(os.getcwd(), yadt_services_filename), 'r')
-            self.service_defs = yaml.load(file)
-            file.close()
-        except IOError, e:
-            self.service_defs = set()
-            print >> sys.stderr, 'cannot find %s, skipping service handling' % yadt_services_filename
-            print >> sys.stderr, e
-
-        self.lockstate = self.get_lock_state()
-
         self.yumdeps = YumDeps(self.yumbase)
+        self.service_defs = {}
+        self.services = {}
 
-        self.services = []
-        for service_def in self.service_defs:
-            name = service_def.keys()[0]
-            service = service_def.get(name)
-            if service:
-                service = service.copy()
-            else:
-                service = {}
-            service['name'] = name
+        try:
+            # TODO to be removed in the near future
+            self.services = self.load_services_oldstyle(self.defaults.get('YADT_SERVICES_FILE'))
+        except IOError, e:
+            print >> sys.stderr, e
+            if e.errno == 2:    # errno 2: file not found
+                self.services = self.load_services(self.defaults['YADT_SERVICES_DIR'])
+        if not self.services:
+            print >> sys.stderr, 'no service definitions found, skipping service handling'
+
+        for name, service in self.services.iteritems():
             init_script = '/etc/init.d/%s' % name
             artefact = self.yumdeps.get_service_artefact(init_script)
             if artefact:
@@ -156,7 +183,7 @@ class Status(object):
                     self.artefacts_filter, self.yumdeps.get_all_requires(whatrequires)))
             else:
                 service['state_handling'] = 'serverside'
-            self.services.append({name: service})
+
         self.add_services_ignore()
         self.add_services_states()
         self.add_services_extra()
@@ -182,6 +209,8 @@ class Status(object):
             self.state = 'update_needed'
         else:
             self.state = 'uptodate'
+
+        self.lockstate = self.get_lock_state()
 
         self.host = self.hostname = socket.gethostname().split('.', 1)[0]
         self.fqdn = socket.getfqdn()
@@ -218,7 +247,7 @@ class Status(object):
 
 
     def add_services_states(self):
-        for service in [s.values()[0] for s in self.services]:
+        for service in self.services.values():
             init_script = service.get('init_script')
             if not init_script:
                 continue
@@ -243,7 +272,7 @@ class Status(object):
 
 
     def add_services_ignore(self):
-        for service in [s.values()[0] for s in self.services]:
+        for service in self.services.values():
             ignore_file = os.path.join(self.defaults['YADT_LOCK_DIR'], 'ignore.%s' % service['name'])
             try:
                 file = open(ignore_file)
@@ -256,7 +285,7 @@ class Status(object):
 
     def add_services_extra(self):
         executable = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
-        for service in [s.values()[0] for s in self.services]:
+        for service in self.services.values():
             extra_file = '/usr/bin/yadt-yadtminion-service-%s' % service['name']
             if os.path.isfile(extra_file):
                 mode = os.stat(extra_file).st_mode
