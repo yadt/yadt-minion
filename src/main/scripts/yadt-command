@@ -10,9 +10,9 @@ def flush(froom, tos):
         line = froom.readline()
         if not line:
             break
-        handle_line(line, tos)
+        tee(line, tos)
 
-def handle_line(line, tos):
+def tee(line, tos):
     for to in tos:
         to.write(line)
 
@@ -29,9 +29,9 @@ def cmd(args):
 
         for fd in ret[0]:
             if fd == p.stdout.fileno():
-                handle_line(p.stdout.readline(), [sys.stdout])
+                tee(p.stdout.readline(), [sys.stdout])
             if fd == p.stderr.fileno():
-                handle_line(p.stderr.readline(), [sys.stderr])
+                tee(p.stderr.readline(), [sys.stderr])
 
         if p.poll() != None:
             flush(p.stdout, [sys.stdout])

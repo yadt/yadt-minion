@@ -113,19 +113,13 @@ class YumDeps(object):
 
 
 class Status(object):
-    def __init__(self, yadt_default_filename='/etc/default/yadt'):
+    def __init__(self):
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
         self.yumbase.conf.cache = not(is_root)
 
-        #self.defaults = Status.load_defaults(yadt_default_filename)
-        self.defaults = {
-            'YADT_ARTEFACT_FILTER': '.*',
-            'YADT_SERVICES_FILE': 'res/yadt.services.dummy',
-            'YADT_YUM_COMMAND': 'sudo',
-            'YADT_LOCK_DIR': '/var/lock/yadt'
-        }
+        self.defaults = Status.load_defaults()
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         yadt_services_filename = self.defaults.get('YADT_SERVICES_FILE')
@@ -216,25 +210,19 @@ class Status(object):
         self.structure_keys = [key for key in self.__dict__.keys()
             if key not in ['yumbase', 'yumdeps', 'service_defs', 'artefacts_filter']]
 
-
     @classmethod
-    def load_defaults(clazz, yadt_default_filename):
+    def load_defaults(clazz):
         defaults = {}
-        p = subprocess.Popen(
-            '. %s; for thisYADT_VAR in ${!YADT_*}; do echo $thisYADT_VAR "${!thisYADT_VAR}"; done' % yadt_default_filename,
-            shell=True, stdout=subprocess.PIPE)
-        stdoutdata, _ = p.communicate()
-        for line in stdoutdata.splitlines():
-            var, value = line.split(' ', 1)
-            defaults[var] = value
+        execfile('/etc/default/yadt', globals(), defaults)
         return defaults
+
 
     def add_services_states(self):
         for service in [s.values()[0] for s in self.services]:
             init_script = service.get('init_script')
             if not init_script:
                 continue
-            cmds = [init_script, 'status']
+            cmds = [init_script, 'yadtminion']
             if self.defaults.get('YADT_YUM_COMMAND'):
                 cmds = [self.defaults.get('YADT_YUM_COMMAND')] + cmds
             p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
@@ -269,7 +257,7 @@ class Status(object):
     def add_services_extra(self):
         executable = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
         for service in [s.values()[0] for s in self.services]:
-            extra_file = '/usr/bin/yadt-status-service-%s' % service['name']
+            extra_file = '/usr/bin/yadt-yadtminion-service-%s' % service['name']
             if os.path.isfile(extra_file):
                 mode = os.stat(extra_file).st_mode
                 if mode & executable:
