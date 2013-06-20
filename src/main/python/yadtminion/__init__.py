@@ -9,6 +9,7 @@ import stat
 import netifaces
 import yaml
 import yum
+import yadtminion.yaml_merger
 
 
 class YumDeps(object):
@@ -148,14 +149,16 @@ class Status(object):
             print >> sys.stderr, e
         return {}
 
+    def load_settings(self):
+        self.settings = yadtminion.yaml_merger.merge_yaml_files('/etc/yadt.conf.d/')
+        self.defaults = self.settings.get('defaults', {})
+        self.services = self.settings.get('services', {})
+
     def __init__(self):
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
         self.yumbase.conf.cache = not(is_root)
-
-        self.defaults = Status.load_defaults()
-        self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self.yumdeps = YumDeps(self.yumbase)
         self.service_defs = {}
@@ -163,17 +166,28 @@ class Status(object):
 
         try:
             # TODO to be removed in the near future
+            self.defaults = Status.load_defaults()
             self.services = self.load_services_oldstyle(self.defaults.get('YADT_SERVICES_FILE'))
         except IOError, e:
             print >> sys.stderr, e
             if e.errno == 2:    # errno 2: file not found
-                self.services = self.load_services(self.defaults['YADT_SERVICES_DIR'])
+                self.load_settings()
+            # TODO what happens otherwise?
+        except KeyError, e:
+            print >> sys.stderr, e
+            self.load_settings()
+
         if not self.services:
             print >> sys.stderr, 'no service definitions found, skipping service handling'
+
+        for name in self.services:
+            if self.services[name] is None:
+                self.services[name] = {}
 
         for name, service in self.services.iteritems():
             init_script = '/etc/init.d/%s' % name
             artefact = self.yumdeps.get_service_artefact(init_script)
+            service['name'] = name
             if artefact:
                 service['init_script'] = init_script
                 service['service_artefact'] = artefact
@@ -183,6 +197,8 @@ class Status(object):
                     self.artefacts_filter, self.yumdeps.get_all_requires(whatrequires)))
             else:
                 service['state_handling'] = 'serverside'
+
+        self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self.add_services_ignore()
         self.add_services_states()
