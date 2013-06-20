@@ -1,0 +1,6 @@
+foo:
+  a: BBBB
+  c:
+    x: YYYY
+    d: [99, 100]
+    e: f
