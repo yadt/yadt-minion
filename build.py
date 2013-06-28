@@ -19,6 +19,7 @@ from pybuilder.core import use_plugin, init, Author
 use_plugin('python.core')
 use_plugin('python.integrationtest')
 use_plugin('python.install_dependencies')
+use_plugin('python.flake8')
 
 use_plugin('python.distutils')
 use_plugin('python.pydev')
@@ -39,7 +40,7 @@ summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
 version = '0.2'
 
-default_task = ['publish']
+default_task = ['analyze', 'publish']
 
 
 @init
