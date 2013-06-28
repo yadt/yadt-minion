@@ -73,8 +73,9 @@ class YumDeps(object):
         visited.add(artefact)
         requires = self.whatrequires.get(artefact, [])
         result = [artefact]
-        for require in requires:
-            result.extend(self.get_all_whatrequires(require, visited))
+        if artefact not in self.stop_artefacts:
+            for require in requires:
+                result.extend(self.get_all_whatrequires(require, visited))
         return result
 
 
@@ -87,7 +88,12 @@ class YumDeps(object):
                 continue
             visited.add(artefact)
             result.append(artefact)
-            result.extend(self.get_all_requires(self.requires.get(artefact), visited))
+
+            if artefact not in self.stop_artefacts:
+                new_artefacts = self.requires.get(artefact)
+                if not new_artefacts:
+                    continue
+                result.extend(self.get_all_requires(new_artefacts, visited))
         return result
 
 
@@ -107,9 +113,17 @@ class YumDeps(object):
                 try:
                     old_pkg = YumDeps.get_id(self.yumbase.getPackageObject(up[1]))
                 except yum.Errors.DepError:
-                    old_pkg = up[1]
+                    old_pkg = self._convert_package_tuple_to_id(up[1])
                 self.all_updates[new_pkg] = old_pkg
         return self.all_updates
+
+
+    def _convert_package_tuple_to_id(self, _tuple):
+        epoch = _tuple[2]
+        if int(epoch) == 0:
+            return '%s/%s-%s.%s'%(_tuple[0], _tuple[3], _tuple[4], _tuple[1])
+        else:
+            return '%s/%s:%s-%s.%s'%(_tuple[0], epoch, _tuple[3], _tuple[4], _tuple[1])
 
 
 
@@ -184,21 +198,24 @@ class Status(object):
             if self.services[name] is None:
                 self.services[name] = {}
 
+        self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
+
+        self._determine_stop_artefacts()
+
         for name, service in self.services.iteritems():
             init_script = '/etc/init.d/%s' % name
-            artefact = self.yumdeps.get_service_artefact(init_script)
+            service_artefact = self.yumdeps.get_service_artefact(init_script)
             service['name'] = name
-            if artefact:
+            if service_artefact:
                 service['init_script'] = init_script
-                service['service_artefact'] = artefact
-                whatrequires = self.yumdeps.get_all_whatrequires(artefact)
-                service['toplevel_artefacts'] = whatrequires
+                service['service_artefact'] = service_artefact
+                toplevel_artefacts = self.yumdeps.get_all_whatrequires(service_artefact)
+                service['toplevel_artefacts'] = toplevel_artefacts
                 service['needs_artefacts'] = map(self.yumdeps.strip_version, filter(
-                    self.artefacts_filter, self.yumdeps.get_all_requires(whatrequires)))
+                    self.artefacts_filter, self.yumdeps.get_all_requires(toplevel_artefacts)))
             else:
                 service['state_handling'] = 'serverside'
 
-        self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self.add_services_ignore()
         self.add_services_states()
@@ -267,9 +284,7 @@ class Status(object):
             init_script = service.get('init_script')
             if not init_script:
                 continue
-            cmds = [init_script, 'yadtminion']
-            if self.defaults.get('YADT_YUM_COMMAND'):
-                cmds = [self.defaults.get('YADT_YUM_COMMAND')] + cmds
+            cmds = [init_script, 'status']
             p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
             p.wait()
             service['state'] = p.returncode
@@ -311,6 +326,16 @@ class Status(object):
                     stdoutdata, _ = p.communicate()
                     service['extra'] = yaml.load(stdoutdata)
 
+
+    def _determine_stop_artefacts(self):
+        self.yumdeps.stop_artefacts = []
+        if hasattr(self, 'settings') and self.settings.get('package_handling'):
+            stop_dependency_resolution_provides = self.settings['package_handling']['stop_dependency_resolution']['provides']
+            stop_artefacts = []
+            for provides in stop_dependency_resolution_provides:
+                stop_artefacts_for_provides = self.yumbase.rpmdb.getProvides(provides).keys()
+                stop_artefacts.extend(stop_artefacts_for_provides)
+            self.yumdeps.stop_artefacts = [self.yumdeps.get_id(package) for package in stop_artefacts]
 
     def get_status(self):
         return dict(filter(lambda item: item[0] in self.structure_keys, self.__dict__.iteritems()))
