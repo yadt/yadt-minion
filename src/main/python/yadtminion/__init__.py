@@ -212,7 +212,9 @@ class Status(object):
                 toplevel_artefacts = self.yumdeps.get_all_whatrequires(service_artefact)
                 service['toplevel_artefacts'] = toplevel_artefacts
                 service['needs_artefacts'] = map(self.yumdeps.strip_version, filter(
-                    self.artefacts_filter, self.yumdeps.get_all_requires(toplevel_artefacts)))
+                    self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact])))
+                service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
+                    self.artefacts_filter, toplevel_artefacts)))
             else:
                 service['state_handling'] = 'serverside'
 
