@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+import os
 import subprocess
 import sys
 import select
+
+from yadtminion.configuration import load_yadt_defaults
 
 
 def flush(froom, tos):
@@ -17,28 +20,41 @@ def tee(line, tos):
         to.write(line)
 
 def cmd(args):
+    defaults = load_yadt_defaults()
+    log_dir = defaults['YADT_LOG_DIR']
+
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
+
+    log_file_name = os.environ['LOG_FILE']
+    path_to_log_file = os.path.join(log_dir, log_file_name)
+
     if not args:
         sys.stderr.write("no command given?!\n")
         sys.exit(1)
 
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    with open(path_to_log_file, 'w') as log_file:
 
-    while True:
-        reads = [p.stdout.fileno(), p.stderr.fileno()]
-        ret = select.select(reads, [], [])
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        for fd in ret[0]:
-            if fd == p.stdout.fileno():
-                tee(p.stdout.readline(), [sys.stdout])
-            if fd == p.stderr.fileno():
-                tee(p.stderr.readline(), [sys.stderr])
+        while True:
+            reads = [p.stdout.fileno(), p.stderr.fileno()]
+            ret = select.select(reads, [], [])
 
-        if p.poll() != None:
-            flush(p.stdout, [sys.stdout])
-            flush(p.stderr, [sys.stderr])
-            break
+            for fd in ret[0]:
+                if fd == p.stdout.fileno():
+                    tee(p.stdout.readline(), [sys.stdout, log_file])
+                if fd == p.stderr.fileno():
+                    tee(p.stderr.readline(), [sys.stderr, log_file])
+
+            if p.poll() != None:
+                flush(p.stdout, [sys.stdout, log_file])
+                flush(p.stderr, [sys.stderr, log_file])
+                break
+
+        log_file.write('"%s" exited with code %d'%(' '.join(args), p.returncode))
 
     print "return code: %i" % p.returncode
 
 if __name__ == '__main__':
-    cmd(['find', '/tmp'])
+    cmd(sys.argv[1:])

@@ -126,7 +126,6 @@ class YumDeps(object):
             return '%s/%s:%s-%s.%s'%(_tuple[0], epoch, _tuple[3], _tuple[4], _tuple[1])
 
 
-
 class Status(object):
     def load_services_oldstyle(self, filename):
         with open(filename) as f:
@@ -168,16 +167,7 @@ class Status(object):
         self.defaults = self.settings.get('defaults', {})
         self.services = self.settings.get('services', {})
 
-    def __init__(self):
-        self.yumbase = yum.YumBase()
-        is_root = os.geteuid() == 0
-        self.yumbase.preconf.init_plugins = is_root
-        self.yumbase.conf.cache = not(is_root)
-
-        self.yumdeps = YumDeps(self.yumbase)
-        self.service_defs = {}
-        self.services = {}
-
+    def load_defaults_and_settings(self):
         try:
             # TODO to be removed in the near future
             self.defaults = Status.load_defaults()
@@ -201,6 +191,18 @@ class Status(object):
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self._determine_stop_artefacts()
+
+    def __init__(self):
+        self.yumbase = yum.YumBase()
+        is_root = os.geteuid() == 0
+        self.yumbase.preconf.init_plugins = is_root
+        self.yumbase.conf.cache = not(is_root)
+
+        self.yumdeps = YumDeps(self.yumbase)
+        self.service_defs = {}
+        self.services = {}
+
+        self.load_defaults_and_settings()
 
         for name, service in self.services.iteritems():
             init_script = '/etc/init.d/%s' % name
