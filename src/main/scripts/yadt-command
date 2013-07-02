@@ -56,11 +56,9 @@ def cmd(args):
 
         log_file.write('"%s" exited with code %d'%(' '.join(args), p.returncode))
 
-    print "return code: %i" % p.returncode
     sys.exit(p.returncode)
 
 def _setup_environment(defaults):
-    print "setting up environment %s"%defaults
     for key, value in defaults.iteritems():
         os.environ[key] = str(value)
 
