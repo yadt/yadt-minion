@@ -62,7 +62,7 @@ def cmd(args):
 def _setup_environment(defaults):
     print "setting up environment %s"%defaults
     for key, value in defaults.iteritems():
-        os.environ[key] = value
+        os.environ[key] = str(value)
 
 if __name__ == '__main__':
     cmd(sys.argv[1:])
