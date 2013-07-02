@@ -1,0 +1,16 @@
+#!/bin/bash
+set -u -e -E -o pipefail -C
+
+
+SERVICE=${1:?no SERVICE specified?!}
+MESSAGE=${2:?no MESSAGE specified?!}
+
+. yadt-host-checkaccess
+
+IGNORE_FILE=$YADT_LOCK_DIR/ignore.$SERVICE
+
+echo "message: $MESSAGE
+owner: $WHO
+when: $(date)" > $IGNORE_FILE
+
+echo "done"

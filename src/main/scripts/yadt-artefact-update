@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e -E -C -u -o pipefail
+
+export YADT_ARTEFACTS=$@
+if [[ -z $YADT_ARTEFACTS ]]; then
+    echo "no artefacts given, aborting" && exit 1
+fi
+sudo /usr/bin/yum upgrade -y $YADT_ARTEFACTS

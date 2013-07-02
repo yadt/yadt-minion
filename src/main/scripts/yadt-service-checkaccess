@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e -E -C -u -o pipefail
+
+readonly SERVICE_IGNOREFILE="${SERVICE:+$YADT_LOCK_DIR/ignore.$SERVICE}"
+
+if [[ -f $SERVICE_IGNOREFILE ]]; then
+    echo "service $SERVICE is ignored:" >&2
+    cat $SERVICE_IGNOREFILE >&2
+    exit $YADT_EXITCODE_SERVICE_IGNORED
+fi

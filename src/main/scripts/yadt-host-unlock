@@ -1,0 +1,19 @@
+#!/bin/bash
+set -u -e -E -o pipefail -C
+
+
+FORCE=${1:-}
+WHO=${WHO:-$(whoami)@localhost}
+
+HOST_LOCKFILE=$YADT_LOCK_DIR/host.lock
+
+if [[ -e $HOST_LOCKFILE ]] && ! grep -q "^owner: $WHO$" $HOST_LOCKFILE; then
+    echo "host locked!" >&2
+    cat $HOST_LOCKFILE >&2
+    [[ -n $FORCE ]] && echo "unignore has no force option; consider using yadt-host-lock with force option instead" >&2
+    exit $YADT_EXITCODE_HOST_LOCKED
+fi
+
+rm -f $HOST_LOCKFILE
+
+echo "done"

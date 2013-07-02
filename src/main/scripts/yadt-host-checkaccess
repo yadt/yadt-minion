@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e -E -C -u -o pipefail
+
+: ${FORCE:=}
+WHO=${WHO:-$(whoami)}
+
+
+export HOST_LOCKFILE=$YADT_LOCK_DIR/host.lock
+
+if [[ -e $HOST_LOCKFILE ]] && ! grep -q "^owner: $WHO$" $HOST_LOCKFILE; then
+    echo "host locked!" >&2
+    cat $HOST_LOCKFILE >&2
+    [[ -z $FORCE ]] && exit $YADT_EXITCODE_HOST_LOCKED
+    echo "forcing lock break" >&2
+fi

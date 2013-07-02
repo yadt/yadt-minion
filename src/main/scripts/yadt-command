@@ -33,6 +33,8 @@ def cmd(args):
         sys.stderr.write("no command given?!\n")
         sys.exit(1)
 
+    _setup_environment(defaults)
+
     with open(path_to_log_file, 'w') as log_file:
 
         p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -55,6 +57,12 @@ def cmd(args):
         log_file.write('"%s" exited with code %d'%(' '.join(args), p.returncode))
 
     print "return code: %i" % p.returncode
+    sys.exit(p.returncode)
+
+def _setup_environment(defaults):
+    print "setting up environment %s"%defaults
+    for key, value in defaults.iteritems():
+        os.environ[key] = value
 
 if __name__ == '__main__':
     cmd(sys.argv[1:])

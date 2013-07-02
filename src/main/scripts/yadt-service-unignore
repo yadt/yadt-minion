@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+. yadt-host-checkaccess
+
+SERVICE=${1:?no SERVICE specified?!}
+rm -f $YADT_LOCK_DIR/ignore.$SERVICE
+
+echo "done"

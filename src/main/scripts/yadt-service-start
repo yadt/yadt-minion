@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e -E -C -u -o pipefail
+
+export SERVICE=${1:?no SERVICE specified}
+. yadt-service-checkaccess
+sudo service $SERVICE start

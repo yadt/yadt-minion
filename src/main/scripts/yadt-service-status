@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e -E -C -u -o pipefail
+
+export YADT_SERVICE=${1:?no YADT_SERVICE specified}
+sudo service $YADT_SERVICE status

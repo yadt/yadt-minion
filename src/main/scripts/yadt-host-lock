@@ -1,0 +1,20 @@
+#!/bin/bash
+set -u -e -E -o pipefail -C
+
+MESSAGE=${1:?no MESSAGE specified?!}
+FORCE=${2:-}
+WHO=${WHO:-$(whoami)@localhost}
+
+[[ -n $FORCE ]] && [[ $FORCE != "--force" ]] && {
+    echo "invalid positional force parameter given, was: $FORCE, expected: --force" >&2
+    exit 1
+}
+
+. yadt-host-checkaccess
+
+rm -f $HOST_LOCKFILE
+echo "message: $MESSAGE
+owner: $WHO
+when: $(date)" > $HOST_LOCKFILE
+
+echo "done"
