@@ -328,8 +328,8 @@ class Status(object):
     def host_is_up_to_date(self):
         status = self.get_status()
         if status['next_artefacts'] and len(status['next_artefacts']) > 0:
-            return True
-        return False
+            return False
+        return True
 
     def get_status(self):
         return dict(filter(lambda item: item[0] in self.structure_keys, self.__dict__.iteritems()))
