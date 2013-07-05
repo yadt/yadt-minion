@@ -325,5 +325,11 @@ class Status(object):
                 stop_artefacts.extend(stop_artefacts_for_provides)
             self.yumdeps.stop_artefacts = [self.yumdeps.get_id(package) for package in stop_artefacts]
 
+    def host_is_up_to_date(self):
+        status = self.get_status()
+        if status['next_artefacts'] and len(status['next_artefacts']) > 0:
+            return True
+        return False
+
     def get_status(self):
         return dict(filter(lambda item: item[0] in self.structure_keys, self.__dict__.iteritems()))
