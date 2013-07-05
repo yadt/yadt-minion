@@ -23,11 +23,11 @@ def cmd(args):
     defaults = load_yadt_defaults()
     log_dir = defaults['YADT_LOG_DIR']
 
-    if not os.path.isdir(log_dir):
-        os.makedirs(log_dir)
-
     log_file_name = os.environ['YADT_LOG_FILE']
     path_to_log_file = os.path.join(log_dir, log_file_name)
+
+    if not os.path.isdir(os.path.dirname(path_to_log_file)):
+        os.makedirs(os.path.dirname(path_to_log_file))
 
     if not args:
         sys.stderr.write("no command given?!\n")
