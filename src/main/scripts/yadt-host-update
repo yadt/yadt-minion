@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e -E -C -u -o pipefail
 
-sudo /usr/bin/yum upgrade
+sudo /usr/bin/yum upgrade -y
