@@ -112,9 +112,9 @@ class YumDeps(object):
     def _convert_package_tuple_to_id(self, _tuple):
         epoch = _tuple[2]
         if int(epoch) == 0:
-            return '%s/%s-%s.%s'%(_tuple[0], _tuple[3], _tuple[4], _tuple[1])
+            return '%s/%s-%s.%s' % (_tuple[0], _tuple[3], _tuple[4], _tuple[1])
         else:
-            return '%s/%s:%s-%s.%s'%(_tuple[0], epoch, _tuple[3], _tuple[4], _tuple[1])
+            return '%s/%s:%s-%s.%s' % (_tuple[0], epoch, _tuple[3], _tuple[4], _tuple[1])
 
 
 class Status(object):
@@ -248,7 +248,7 @@ class Status(object):
         self.epoch = round(float(now.strftime('%s')))
         self.ip = socket.gethostbyname(socket.gethostname())
 
-        self.interface = {}     #socket.gethostbyname_ex(socket.gethostname())[2]
+        self.interface = {}  # socket.gethostbyname_ex(socket.gethostname())[2]
         for interface in netifaces.interfaces():
             if interface == 'lo':
                 continue
