@@ -21,13 +21,11 @@ class YumDeps(object):
         self.whatrequires = YumDeps._get_whatrequires(self.requires)
         self.all_updates = None
 
-
     @classmethod
     def get_id(clazz, pkg):
         if pkg.epoch and pkg.epoch != '0':
             return '%s%s%s:%s-%s.%s' % (pkg.name, YumDeps.NAME_VERSION_SEPARATOR, pkg.epoch, pkg.version, pkg.release, pkg.arch)
         return '%s%s%s-%s.%s' % (pkg.name, YumDeps.NAME_VERSION_SEPARATOR, pkg.version, pkg.release, pkg.arch)
-
 
     @classmethod
     def _get_requires(clazz, yumbase):
@@ -43,7 +41,6 @@ class YumDeps(object):
             requires[id] = list(requires[id])
         return requires
 
-
     @classmethod
     def _get_whatrequires(clazz, requires):
         whatrequires = {}
@@ -54,7 +51,6 @@ class YumDeps(object):
                 whatrequires[required].append(pkg)
         return whatrequires
 
-
     def get_service_artefact(self, service_file):
         sas = self.yumbase.rpmdb.getProvides(service_file)
         if not sas:
@@ -63,7 +59,6 @@ class YumDeps(object):
             sys.stderr.write('ERROR: %(service_file)s cannot be mapped to exactly one package: %(sas)s\n' % locals())
             return None
         return YumDeps.get_id(sas.keys()[0])
-
 
     def get_all_whatrequires(self, artefact, visited=None):
         if not visited:
@@ -77,7 +72,6 @@ class YumDeps(object):
             for require in requires:
                 result.extend(self.get_all_whatrequires(require, visited))
         return result
-
 
     def get_all_requires(self, artefacts, visited=None):
         if not visited:
@@ -96,10 +90,8 @@ class YumDeps(object):
                 result.extend(self.get_all_requires(new_artefacts, visited))
         return result
 
-
     def strip_version(self, pkg):
         return pkg.split(YumDeps.NAME_VERSION_SEPARATOR, 1)[0]
-
 
     def load_all_updates(self):
         if not self.all_updates:
@@ -116,7 +108,6 @@ class YumDeps(object):
                     old_pkg = self._convert_package_tuple_to_id(up[1])
                 self.all_updates[new_pkg] = old_pkg
         return self.all_updates
-
 
     def _convert_package_tuple_to_id(self, _tuple):
         epoch = _tuple[2]
@@ -142,7 +133,6 @@ class Status(object):
             except BaseException, e:
                 print >> sys.stderr, e
         return services
-
 
     def load_services(self, d):
         try:
@@ -220,7 +210,6 @@ class Status(object):
             else:
                 service['state_handling'] = 'serverside'
 
-
         self.add_services_ignore()
         self.add_services_states()
         self.add_services_extra()
@@ -282,7 +271,6 @@ class Status(object):
         execfile('/etc/default/yadt', globals(), defaults)
         return defaults
 
-
     def add_services_states(self):
         for service in self.services.values():
             init_script = service.get('init_script')
@@ -292,7 +280,6 @@ class Status(object):
             p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
             p.wait()
             service['state'] = p.returncode
-
 
     def get_lock_state(self):
         lock_file = os.path.join(self.defaults['YADT_LOCK_DIR'], 'host.lock')
@@ -305,7 +292,6 @@ class Status(object):
                 sys.stderr.flush()
         return None
 
-
     def add_services_ignore(self):
         for service in self.services.values():
             ignore_file = os.path.join(self.defaults['YADT_LOCK_DIR'], 'ignore.%s' % service['name'])
@@ -316,7 +302,6 @@ class Status(object):
                 if e.errno != 2:    # 2: No such file or directory
                     sys.stderr.write(str(e) + '\n')
                     sys.stderr.flush()
-
 
     def add_services_extra(self):
         executable = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
@@ -329,7 +314,6 @@ class Status(object):
                     p = subprocess.Popen(extra_file, stdout=subprocess.PIPE)
                     stdoutdata, _ = p.communicate()
                     service['extra'] = yaml.load(stdoutdata)
-
 
     def _determine_stop_artefacts(self):
         self.yumdeps.stop_artefacts = []
