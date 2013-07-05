@@ -26,7 +26,7 @@ def cmd(args):
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
 
-    log_file_name = os.environ['LOG_FILE']
+    log_file_name = os.environ['YADT_LOG_FILE']
     path_to_log_file = os.path.join(log_dir, log_file_name)
 
     if not args:
