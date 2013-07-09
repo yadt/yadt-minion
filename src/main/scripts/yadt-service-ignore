@@ -12,5 +12,6 @@ IGNORE_FILE=$YADT_LOCK_DIR/ignore.$SERVICE
 echo "message: $MESSAGE
 owner: $WHO
 when: $(date)" > $IGNORE_FILE
+chmod g+w $IGNORE_FILE
 
 echo "done"

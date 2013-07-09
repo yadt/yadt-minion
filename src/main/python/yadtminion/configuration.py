@@ -1,5 +1,3 @@
-import sys
-
 import yadtminion
 from yadtminion import Status
 
@@ -7,8 +5,7 @@ from yadtminion import Status
 def load_yadt_defaults():
     try:
         return load_yadt_defaults_oldstyle()
-    except BaseException, e:
-        print >> sys.stderr, e
+    except BaseException:
         return load_yadt_defaults_newstyle()
 
 

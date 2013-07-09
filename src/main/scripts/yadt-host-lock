@@ -16,5 +16,8 @@ rm -f $HOST_LOCKFILE
 echo "message: $MESSAGE
 owner: $WHO
 when: $(date)" > $HOST_LOCKFILE
+chmod g+w $HOST_LOCKFILE
+
+echo "$HOST_LOCKFILE created"
 
 echo "done"
