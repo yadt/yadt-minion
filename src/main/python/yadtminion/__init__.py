@@ -162,9 +162,11 @@ class Status(object):
             # TODO to be removed in the near future
             self.defaults = Status.load_defaults()
             self.services = self.load_services_oldstyle(self.defaults.get('YADT_SERVICES_FILE'))
-        except IOError:
-                self.load_settings()
-            # TODO what happens otherwise?
+        except IOError, e:
+                if e.errno == 2:
+                    self.load_settings()
+                else:
+                    raise RuntimeError('Can not determine configuration : %s'%str(e))
         except KeyError, e:
             print >> sys.stderr, e
             self.load_settings()
