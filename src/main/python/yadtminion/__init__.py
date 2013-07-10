@@ -162,9 +162,7 @@ class Status(object):
             # TODO to be removed in the near future
             self.defaults = Status.load_defaults()
             self.services = self.load_services_oldstyle(self.defaults.get('YADT_SERVICES_FILE'))
-        except IOError, e:
-            print >> sys.stderr, e
-            if e.errno == 2:    # errno 2: file not found
+        except IOError:
                 self.load_settings()
             # TODO what happens otherwise?
         except KeyError, e:
