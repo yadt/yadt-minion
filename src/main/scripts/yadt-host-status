@@ -1,10 +1,16 @@
-#!/usr/bin/env python
+#!/bin/bash
 
-import sys
+up_to_date=$(sudo python -c "
+import yadtminion
+status = yadtminion.Status();
+
 import yadtminion
 
 status = yadtminion.Status()
 if status.host_is_up_to_date():
-    sys.exit(0)
+    print 0
 else:
-    sys.exit(1)
+    print 1
+")
+
+exit $up_to_date
