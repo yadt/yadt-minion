@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import os
 import subprocess
@@ -26,6 +26,7 @@ def cmd(args):
     log_file_name = os.environ['YADT_LOG_FILE']
     path_to_log_file = os.path.join(log_dir, log_file_name)
 
+    os.umask(0002)
     if not os.path.isdir(os.path.dirname(path_to_log_file)):
         os.makedirs(os.path.dirname(path_to_log_file))
 
