@@ -1,0 +1,8 @@
+{
+  'defaults': {
+    'YADT_LOCK_DIR': '/tmp/',
+    'YADT_LOG_DIR': '/var/log/yadt/',
+    'YADT_EXITCODE_HOST_LOCKED': 150
+    'YADT_EXITCODE_SERVICE_IGNORED': 151,
+  }
+}
