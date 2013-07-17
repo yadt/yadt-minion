@@ -278,7 +278,7 @@ class Status(object):
             init_script = service.get('init_script')
             if not init_script:
                 continue
-            cmds = [init_script, 'status']
+            cmds = ['/usr/bin/yadt-service-status', service['name']]
             p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
             p.wait()
             service['state'] = p.returncode
