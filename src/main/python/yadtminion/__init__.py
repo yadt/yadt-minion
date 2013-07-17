@@ -186,6 +186,8 @@ class Status(object):
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
+        self.yumbase.preconf.errorlevel = 0
+        self.yumbase.preconf.debuglevel = 0
         self.yumbase.conf.cache = not(is_root)
 
         self.yumdeps = YumDeps(self.yumbase)
