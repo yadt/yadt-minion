@@ -38,7 +38,7 @@ name = 'yadt-minion'
 license = 'GNU GPL v3'
 summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
-version = '0.2'
+version = '0.3'
 
 default_task = ['analyze', 'publish']
 
@@ -54,7 +54,10 @@ def set_properties(project):
     project.get_property('copy_resources_glob').append('setup.cfg')
     project.set_property('dir_dist_scripts', 'scripts')
 
-    project.get_property('distutils_commands').append('bdist_egg')
+    project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults')
+    project.install_file('/etc/default/', 'yadtminion/yadt')
+
+    project.get_property('distutils_commands').append('bdist_rpm')
     project.set_property('distutils_classifiers', [
         'Development Status :: 4 - Beta',
         'Environment :: Console',

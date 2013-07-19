@@ -186,6 +186,8 @@ class Status(object):
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
+        self.yumbase.preconf.errorlevel = 0
+        self.yumbase.preconf.debuglevel = 0
         self.yumbase.conf.cache = not(is_root)
 
         self.yumdeps = YumDeps(self.yumbase)
@@ -276,7 +278,7 @@ class Status(object):
             init_script = service.get('init_script')
             if not init_script:
                 continue
-            cmds = [init_script, 'status']
+            cmds = ['/usr/bin/yadt-service-status', service['name']]
             p = subprocess.Popen(cmds, stdout=open(os.devnull, 'w'))
             p.wait()
             service['state'] = p.returncode
