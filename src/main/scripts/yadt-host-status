@@ -1,16 +1,2 @@
 #!/bin/bash
-
-up_to_date=$(sudo python -c "
-import yadtminion
-status = yadtminion.Status();
-
-import yadtminion
-
-status = yadtminion.Status()
-if status.host_is_up_to_date():
-    print 0
-else:
-    print 1
-")
-
-exit $up_to_date
+sudo /usr/bin/yadt-host-status.py
