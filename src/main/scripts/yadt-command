@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import select
+import errno
 
 from yadtminion.configuration import load_yadt_defaults
 
@@ -27,8 +28,14 @@ def cmd(args):
     path_to_log_file = os.path.join(log_dir, log_file_name)
 
     os.umask(0002)
-    if not os.path.isdir(os.path.dirname(path_to_log_file)):
+
+    try:
         os.makedirs(os.path.dirname(path_to_log_file))
+    except OSError as exception:
+        if exception.errno == errno.EEXIST and os.path.isdir(os.path.dirname(path_to_log_file)):
+            print "catch"
+            pass
+        else: raise
 
     if not args:
         sys.stderr.write("no command given?!\n")
