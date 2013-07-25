@@ -33,7 +33,6 @@ def cmd(args):
         os.makedirs(os.path.dirname(path_to_log_file))
     except OSError as exception:
         if exception.errno == errno.EEXIST and os.path.isdir(os.path.dirname(path_to_log_file)):
-            print "catch"
             pass
         else: raise
 
