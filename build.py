@@ -54,7 +54,7 @@ def set_properties(project):
     project.get_property('copy_resources_glob').append('setup.cfg')
     project.set_property('dir_dist_scripts', 'scripts')
 
-    project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults')
+    project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults.yaml')
     project.install_file('/etc/default/', 'yadtminion/yadt')
 
     project.get_property('distutils_commands').append('bdist_rpm')
