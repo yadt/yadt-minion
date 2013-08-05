@@ -5,7 +5,7 @@ set -u -e -E -o pipefail -C
 SERVICE=${1:?no SERVICE specified?!}
 MESSAGE=${2:?no MESSAGE specified?!}
 
-. yadt-host-checkaccess
+. yadt-service-checkaccess
 
 IGNORE_FILE=$YADT_LOCK_DIR/ignore.$SERVICE
 
