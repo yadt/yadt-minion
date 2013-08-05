@@ -186,7 +186,7 @@ class Status(object):
         self._determine_stop_artefacts()
 
     def determine_latest_kernel(self):
-        kernel_artefacts = sorted([a for a in self.current_artefacts if a.startswith('kernel/')])
+        kernel_artefacts = sorted([a for a in self.current_artefacts if a.startswith('kernel/')], reverse=True)
         return kernel_artefacts[0] if kernel_artefacts else None
 
     def next_artefacts_need_reboot(self):
