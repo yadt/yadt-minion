@@ -5,6 +5,7 @@ import os
 import socket
 import datetime
 import stat
+import platform
 
 import netifaces
 import yaml
@@ -153,9 +154,11 @@ class Status(object):
         return {}
 
     def load_settings(self):
-        self.settings = yadtminion.yaml_merger.merge_yaml_files('/etc/yadt.conf.d/')
-        self.defaults = self.settings.get('defaults', {})
-        self.services = self.settings.get('services', {})
+        _settings = yadtminion.yaml_merger.merge_yaml_files('/etc/yadt.conf.d/')
+        for key in ['settings', 'defaults', 'services']:
+            value = _settings.get(key, {})
+            setattr(self, key, value)
+
 
     def load_defaults_and_settings(self):
         try:
@@ -181,6 +184,15 @@ class Status(object):
         self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self._determine_stop_artefacts()
+
+    def determine_latest_kernel(self):
+        kernel_artefacts = sorted([a for a in self.current_artefacts if a.startswith('kernel/')])
+        return kernel_artefacts[0] if kernel_artefacts else None
+
+    def next_artefacts_need_reboot(self):
+        result = []
+        result.extend(set([a.split("/", 1)[0] for a in self.next_artefacts.keys()]) & set(self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])))
+        return result
 
     def __init__(self):
         self.yumbase = yum.YumBase()
@@ -231,8 +243,6 @@ class Status(object):
         self.yumdeps.load_all_updates()
         for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
             self.updates[a] = self.yumdeps.all_updates[a]
-        if len(self.next_artefacts) == 0:
-            self.next_artefacts = None
 
         if len(self.updates):
             self.state = 'update_needed'
@@ -245,6 +255,10 @@ class Status(object):
         self.fqdn = socket.getfqdn()
         f = open('/proc/uptime', 'r')
         self.uptime = float(f.readline().split()[0])
+        self.running_kernel = 'kernel/' + platform.uname()[2]
+        self.latest_kernel = self.determine_latest_kernel()
+        self.reboot_required_to_activate_latest_kernel = self.running_kernel != self.latest_kernel
+        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
 
         now = datetime.datetime.now()
         self.date = str(now)
