@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e -E -C -u -o pipefail
 
+. yadt-host-checkaccess
+
 export YADT_ARTEFACTS=$@
 if [[ -z $YADT_ARTEFACTS ]]; then
     echo "no artefacts given, aborting" && exit 1

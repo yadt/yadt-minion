@@ -1,4 +1,6 @@
 #!/bin/bash
 set -e -E -C -u -o pipefail
 
-sudo /usr/bin/yum upgrade -y
+. yadt-host-checkaccess
+
+sudo /usr/bin/yum upgrade -y $@
