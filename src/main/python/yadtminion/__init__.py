@@ -11,6 +11,8 @@ import netifaces
 import yaml
 import yum
 import yadtminion.yaml_merger
+import rpm
+from rpmUtils.miscutils import stringToVersion
 
 
 class YumDeps(object):
@@ -159,7 +161,6 @@ class Status(object):
             value = _settings.get(key, {})
             setattr(self, key, value)
 
-
     def load_defaults_and_settings(self):
         try:
             # TODO to be removed in the near future
@@ -170,7 +171,7 @@ class Status(object):
                 if e.errno == 2:
                     self.load_settings()
                 else:
-                    raise RuntimeError('Can not determine configuration : %s'%str(e))
+                    raise RuntimeError('Can not determine configuration : %s' % str(e))
         except KeyError, e:
             print >> sys.stderr, e
             self.load_settings()
@@ -187,7 +188,12 @@ class Status(object):
         self._determine_stop_artefacts()
 
     def determine_latest_kernel(self):
-        kernel_artefacts = sorted([a for a in self.current_artefacts if a.startswith('kernel/')], reverse=True)
+        kernel_artefacts = sorted(
+            map(
+                stringToVersion,
+                [a.replace('/', '-') for a in self.current_artefacts if a.startswith('kernel/')]
+            ),
+            cmp=rpm.labelCompare, reverse=True)
         return kernel_artefacts[0] if kernel_artefacts else None
 
     def next_artefacts_need_reboot(self):
@@ -219,8 +225,8 @@ class Status(object):
                 toplevel_artefacts = self.yumdeps.get_all_whatrequires(service_artefact)
                 service['toplevel_artefacts'] = toplevel_artefacts
                 service.setdefault('needs_artefacts', []).extend(
-                        map(self.yumdeps.strip_version, filter(
-                            self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
+                    map(self.yumdeps.strip_version, filter(
+                        self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
                 service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
                     self.artefacts_filter, toplevel_artefacts)))
             else:
