@@ -3,6 +3,7 @@ set -e -E -C -u -o pipefail
 
 . yadt-host-checkaccess
 
+export SERVICE=${1:?no SERVICE specified}
 readonly SERVICE_IGNOREFILE="${SERVICE:+$YADT_LOCK_DIR/ignore.$SERVICE}"
 
 if [[ -f $SERVICE_IGNOREFILE ]]; then
