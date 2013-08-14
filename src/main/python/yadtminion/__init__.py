@@ -194,7 +194,10 @@ class Status(object):
                 [a.replace('/', '-') for a in self.current_artefacts if a.startswith('kernel/')]
             ),
             cmp=rpm.labelCompare, reverse=True)
-        return kernel_artefacts[0] if kernel_artefacts else None
+
+        if kernel_artefacts:
+            (epoch, name, version) = kernel_artefacts[0]
+            return '%s/%s' % (name, version) if epoch == '0' else '%s/%s:%s' % (name, epoch, version)
 
     def next_artefacts_need_reboot(self):
         result = []
