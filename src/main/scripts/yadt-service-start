@@ -3,4 +3,18 @@ set -e -E -C -u -o pipefail
 
 export SERVICE=${1:?no SERVICE specified}
 . yadt-service-checkaccess
-sudo service $SERVICE start
+
+is_already_running() {
+    pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
+}
+
+if ! is_already_running; then
+    echo "starting $SERVICE"
+    sudo service $SERVICE start
+    exit
+fi
+
+while is_already_running; do
+    echo "service $SERVICE is starting already, checking again in 2 seconds" >&2
+    sleep 2
+done
