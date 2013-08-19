@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e -E
+
+sudo reboot
+sleep 42
+exit 4
