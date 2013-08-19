@@ -27,8 +27,17 @@ class YumDeps(object):
     @classmethod
     def get_id(clazz, pkg):
         if pkg.epoch and pkg.epoch != '0':
-            return '%s%s%s:%s-%s.%s' % (pkg.name, YumDeps.NAME_VERSION_SEPARATOR, pkg.epoch, pkg.version, pkg.release, pkg.arch)
-        return '%s%s%s-%s.%s' % (pkg.name, YumDeps.NAME_VERSION_SEPARATOR, pkg.version, pkg.release, pkg.arch)
+            return '%s%s%s:%s-%s.%s' % (pkg.name,
+                                        YumDeps.NAME_VERSION_SEPARATOR,
+                                        pkg.epoch,
+                                        pkg.version,
+                                        pkg.release,
+                                        pkg.arch)
+        return '%s%s%s-%s.%s' % (pkg.name,
+                                 YumDeps.NAME_VERSION_SEPARATOR,
+                                 pkg.version,
+                                 pkg.release,
+                                 pkg.arch)
 
     @classmethod
     def _get_requires(clazz, yumbase):
@@ -59,7 +68,8 @@ class YumDeps(object):
         if not sas:
             return None
         if len(sas) > 1:
-            sys.stderr.write('ERROR: %(service_file)s cannot be mapped to exactly one package: %(sas)s\n' % locals())
+            sys.stderr.write(
+                'ERROR: %(service_file)s cannot be mapped to exactly one package: %(sas)s\n' % locals())
             return None
         return YumDeps.get_id(sas.keys()[0])
 
@@ -106,7 +116,8 @@ class YumDeps(object):
             for up in ups.getUpdatesTuples():
                 new_pkg = YumDeps.get_id(self.yumbase.getPackageObject(up[0]))
                 try:
-                    old_pkg = YumDeps.get_id(self.yumbase.getPackageObject(up[1]))
+                    old_pkg = YumDeps.get_id(
+                        self.yumbase.getPackageObject(up[1]))
                 except yum.Errors.DepError:
                     old_pkg = self._convert_package_tuple_to_id(up[1])
                 self.all_updates[new_pkg] = old_pkg
@@ -121,6 +132,7 @@ class YumDeps(object):
 
 
 class Status(object):
+
     def load_services_oldstyle(self, filename):
         with open(filename) as f:
             service_defs = yaml.load(f)
@@ -156,7 +168,8 @@ class Status(object):
         return {}
 
     def load_settings(self):
-        _settings = yadtminion.yaml_merger.merge_yaml_files('/etc/yadt.conf.d/')
+        _settings = yadtminion.yaml_merger.merge_yaml_files(
+            '/etc/yadt.conf.d/')
         for key in ['settings', 'defaults', 'services']:
             value = _settings.get(key, {})
             setattr(self, key, value)
@@ -165,13 +178,15 @@ class Status(object):
         try:
             # TODO to be removed in the near future
             self.defaults = Status.load_defaults()
-            self.services = self.load_services_oldstyle(self.defaults.get('YADT_SERVICES_FILE'))
+            self.services = self.load_services_oldstyle(
+                self.defaults.get('YADT_SERVICES_FILE'))
             self.settings = {}
         except IOError, e:
                 if e.errno == 2:
                     self.load_settings()
                 else:
-                    raise RuntimeError('Can not determine configuration : %s' % str(e))
+                    raise RuntimeError(
+                        'Can not determine configuration : %s' % str(e))
         except KeyError, e:
             print >> sys.stderr, e
             self.load_settings()
@@ -183,7 +198,8 @@ class Status(object):
             if self.services[name] is None:
                 self.services[name] = {}
 
-        self.artefacts_filter = re.compile(self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
+        self.artefacts_filter = re.compile(
+            self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
 
         self._determine_stop_artefacts()
 
@@ -191,7 +207,8 @@ class Status(object):
         kernel_artefacts = sorted(
             map(
                 stringToVersion,
-                [a.replace('/', '-') for a in self.current_artefacts if a.startswith('kernel/')]
+                [a.replace('/', '-')
+                 for a in self.current_artefacts if a.startswith('kernel/')]
             ),
             cmp=rpm.labelCompare, reverse=True)
 
@@ -201,7 +218,8 @@ class Status(object):
 
     def next_artefacts_need_reboot(self):
         result = []
-        result.extend(set([a.split("/", 1)[0] for a in self.next_artefacts.keys()]) & set(self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])))
+        result.extend(set([a.split("/", 1)[0] for a in self.next_artefacts.keys()])
+                      & set(self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])))
         return result
 
     def __init__(self):
@@ -225,7 +243,8 @@ class Status(object):
             if service_artefact:
                 service['init_script'] = init_script
                 service['service_artefact'] = service_artefact
-                toplevel_artefacts = self.yumdeps.get_all_whatrequires(service_artefact)
+                toplevel_artefacts = self.yumdeps.get_all_whatrequires(
+                    service_artefact)
                 service['toplevel_artefacts'] = toplevel_artefacts
                 service.setdefault('needs_artefacts', []).extend(
                     map(self.yumdeps.strip_version, filter(
@@ -239,13 +258,15 @@ class Status(object):
         self.add_services_states()
         self.add_services_extra()
 
-        self.handled_artefacts = [a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
+        self.handled_artefacts = [
+            a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
 
-        #self.handled_artefacts_with_dependencies = self.yumdeps.requires
+        # self.handled_artefacts_with_dependencies = self.yumdeps.requires
 
-        #self.handled_artefacts_with_dependencies = {}
-        #for a in filter(self.artefacts_filter, self.yumdeps.requires.keys()):
-            #self.handled_artefacts_with_dependencies[a] = self.yumdeps.requires[a]
+        # self.handled_artefacts_with_dependencies = {}
+        # for a in filter(self.artefacts_filter, self.yumdeps.requires.keys()):
+            # self.handled_artefacts_with_dependencies[a] =
+            # self.yumdeps.requires[a]
 
         self.current_artefacts = self.yumdeps.requires.keys()
 
@@ -268,7 +289,8 @@ class Status(object):
         self.running_kernel = 'kernel/' + platform.uname()[2]
         self.latest_kernel = self.determine_latest_kernel()
         self.reboot_required_to_activate_latest_kernel = self.running_kernel != self.latest_kernel
-        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
+        self.reboot_required_after_next_update = self.next_artefacts_need_reboot(
+        )
 
         now = datetime.datetime.now()
         self.date = str(now)
@@ -290,7 +312,10 @@ class Status(object):
         self.pwd = os.getcwd()
 
         self.structure_keys = [key for key in self.__dict__.keys()
-            if key not in ['yumbase', 'yumdeps', 'service_defs', 'artefacts_filter']]
+                               if key not in ['yumbase',
+                                              'yumdeps',
+                                              'service_defs',
+                                              'artefacts_filter']]
 
     @classmethod
     def load_defaults(clazz):
@@ -321,7 +346,8 @@ class Status(object):
 
     def add_services_ignore(self):
         for service in self.services.values():
-            ignore_file = os.path.join(self.defaults['YADT_LOCK_DIR'], 'ignore.%s' % service['name'])
+            ignore_file = os.path.join(
+                self.defaults['YADT_LOCK_DIR'], 'ignore.%s' % service['name'])
             try:
                 file = open(ignore_file)
                 service['ignored'] = yaml.load(file)
@@ -333,7 +359,8 @@ class Status(object):
     def add_services_extra(self):
         executable = stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH
         for service in self.services.values():
-            extra_file = '/usr/bin/yadt-yadtminion-service-%s' % service['name']
+            extra_file = '/usr/bin/yadt-yadtminion-service-%s' % service[
+                'name']
             if os.path.isfile(extra_file):
                 mode = os.stat(extra_file).st_mode
                 if mode & executable:
@@ -345,12 +372,15 @@ class Status(object):
     def _determine_stop_artefacts(self):
         self.yumdeps.stop_artefacts = []
         if hasattr(self, 'settings') and self.settings.get('package_handling'):
-            stop_dependency_resolution_provides = self.settings['package_handling']['stop_dependency_resolution']['provides']
+            stop_dependency_resolution_provides = self.settings[
+                'package_handling']['stop_dependency_resolution']['provides']
             stop_artefacts = []
             for provides in stop_dependency_resolution_provides:
-                stop_artefacts_for_provides = self.yumbase.rpmdb.getProvides(provides).keys()
+                stop_artefacts_for_provides = self.yumbase.rpmdb.getProvides(
+                    provides).keys()
                 stop_artefacts.extend(stop_artefacts_for_provides)
-            self.yumdeps.stop_artefacts = [self.yumdeps.get_id(package) for package in stop_artefacts]
+            self.yumdeps.stop_artefacts = [
+                self.yumdeps.get_id(package) for package in stop_artefacts]
 
     def host_is_up_to_date(self):
         status = self.get_status()
