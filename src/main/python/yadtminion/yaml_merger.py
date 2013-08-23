@@ -7,6 +7,8 @@ def dict_merge(a, b):
     """merges b into a
     based on http://stackoverflow.com/questions/7204805/python-dictionaries-of-dictionaries-merge
     and extended to also merge arrays and to replace the content of keys with the same name"""
+    if not b:
+        return
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
