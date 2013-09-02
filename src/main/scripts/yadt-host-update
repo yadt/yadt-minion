@@ -3,4 +3,18 @@ set -e -E -C -u -o pipefail
 
 . yadt-host-checkaccess
 
-sudo /usr/bin/yum upgrade -y $@
+getopts r opts && {
+    # remove option from $@
+    shift $(( OPTIND - 1 ))
+}
+
+[[ ! -z $@ ]] && {
+    sudo /usr/bin/yum upgrade -y $@
+}
+
+if [ "$opts" == "r" ]
+    then
+        sudo shutdown -r now
+        sleep 42
+        exit 4
+fi
