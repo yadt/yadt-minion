@@ -3,7 +3,8 @@
     'YADT_LOG_DIR': '/var/log/yadt/',
     'YADT_LOCK_DIR': '/var/lock/yadt',
     'YADT_EXITCODE_HOST_LOCKED': 150,
-    'YADT_EXITCODE_SERVICE_IGNORED': 151
+    'YADT_EXITCODE_SERVICE_IGNORED': 151,
+    'YADT_EXITCODE_HOST_REBOOT_TIMEOUT': 152
   },
   'settings': {
     'ARTEFACTS_INDUCING_REBOOT': ['kernel']

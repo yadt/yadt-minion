@@ -8,7 +8,7 @@ getopts r opts && {
     shift $(( OPTIND - 1 ))
 }
 
-[[ ! -z $@ ]] && {
+[[ -n $@ ]] && {
     sudo /usr/bin/yum upgrade -y $@
 }
 
@@ -16,5 +16,5 @@ if [ "$opts" == "r" ]
     then
         sudo shutdown -r now
         sleep 42
-        exit 4
+        exit $YADT_EXITCODE_HOST_REBOOT_TIMEOUT
 fi
