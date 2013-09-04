@@ -14,7 +14,7 @@ getopts r opts && {
 
 if [ "$opts" == "r" ]
     then
-        sudo shutdown -r now
+        sudo reboot
         sleep 42
         exit $YADT_EXITCODE_HOST_REBOOT_TIMEOUT
 fi
