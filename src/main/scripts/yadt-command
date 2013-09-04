@@ -20,6 +20,7 @@ def flush(froom, tos):
 def tee(line, tos):
     for to in tos:
         to.write(line)
+        to.flush()
 
 
 def cmd(args):
