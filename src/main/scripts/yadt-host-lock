@@ -13,7 +13,7 @@ WHO=${WHO:-$(whoami)@localhost}
 . yadt-host-checkaccess
 
 rm -f $HOST_LOCKFILE
-echo "message: $MESSAGE
+echo "message: \"$MESSAGE\"
 owner: $WHO
 when: $(date)" > $HOST_LOCKFILE
 chmod g+w $HOST_LOCKFILE
