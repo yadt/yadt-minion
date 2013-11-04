@@ -289,8 +289,9 @@ class Status(object):
         self.running_kernel = 'kernel/' + platform.uname()[2]
         self.latest_kernel = self.determine_latest_kernel()
         self.reboot_required_to_activate_latest_kernel = self.running_kernel != self.latest_kernel
-        self.reboot_required_after_next_update = self.next_artefacts_need_reboot(
-        )
+        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
+        if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
+            self.ssh_poll_max_seconds = self.settings.get('ssh_poll_max_seconds')
 
         now = datetime.datetime.now()
         self.date = str(now)
