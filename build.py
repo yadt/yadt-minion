@@ -45,6 +45,8 @@ default_task = ['analyze', 'publish']
 
 @init
 def set_properties(project):
+    project.build_depends_on('mock')
+
     project.depends_on('PyYAML')
     project.depends_on('netifaces')
     project.depends_on('simplejson')
