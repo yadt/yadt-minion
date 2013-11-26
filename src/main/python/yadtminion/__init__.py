@@ -174,7 +174,7 @@ class Status(object):
             value = _settings.get(key, {})
             setattr(self, key, value)
 
-    def load_defaults_and_settings(self):
+    def load_defaults_and_settings(self, only_config=False):
         try:
             # TODO to be removed in the near future
             self.defaults = Status.load_defaults()
@@ -197,6 +197,9 @@ class Status(object):
         for name in self.services:
             if self.services[name] is None:
                 self.services[name] = {}
+
+        if only_config:
+            return
 
         self.artefacts_filter = re.compile(
             self.defaults.get('YADT_ARTEFACT_FILTER', '')).match
@@ -222,19 +225,23 @@ class Status(object):
                       & set(self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])))
         return result
 
-    def __init__(self):
+    def __init__(self, only_config=False):
+        self.service_defs = {}
+        self.services = {}
+
+        if only_config:
+            self.load_defaults_and_settings(only_config=True)
+            return
+
         self.yumbase = yum.YumBase()
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
         self.yumbase.preconf.errorlevel = 0
         self.yumbase.preconf.debuglevel = 0
         self.yumbase.conf.cache = not(is_root)
-
         self.yumdeps = YumDeps(self.yumbase)
-        self.service_defs = {}
-        self.services = {}
 
-        self.load_defaults_and_settings()
+        self.load_defaults_and_settings(only_config=False)
 
         for name, service in self.services.iteritems():
             init_script = '/etc/init.d/%s' % name
@@ -261,13 +268,6 @@ class Status(object):
         self.handled_artefacts = [
             a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
 
-        # self.handled_artefacts_with_dependencies = self.yumdeps.requires
-
-        # self.handled_artefacts_with_dependencies = {}
-        # for a in filter(self.artefacts_filter, self.yumdeps.requires.keys()):
-            # self.handled_artefacts_with_dependencies[a] =
-            # self.yumdeps.requires[a]
-
         self.current_artefacts = self.yumdeps.requires.keys()
 
         self.next_artefacts = self.updates = {}
@@ -289,16 +289,18 @@ class Status(object):
         self.running_kernel = 'kernel/' + platform.uname()[2]
         self.latest_kernel = self.determine_latest_kernel()
         self.reboot_required_to_activate_latest_kernel = self.running_kernel != self.latest_kernel
-        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
+        self.reboot_required_after_next_update = self.next_artefacts_need_reboot(
+        )
         if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
-            self.ssh_poll_max_seconds = self.settings.get('ssh_poll_max_seconds')
+            self.ssh_poll_max_seconds = self.settings.get(
+                'ssh_poll_max_seconds')
 
         now = datetime.datetime.now()
         self.date = str(now)
         self.epoch = round(float(now.strftime('%s')))
         self.ip = socket.gethostbyname(socket.gethostname())
 
-        self.interface = {}  # socket.gethostbyname_ex(socket.gethostname())[2]
+        self.interface = {}
         for interface in netifaces.interfaces():
             if interface == 'lo':
                 continue
