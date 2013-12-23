@@ -47,6 +47,7 @@ default_task = ['analyze', 'publish']
 
 @init
 def set_properties(project):
+    import os
     project.build_depends_on('mock')
 
     project.depends_on('PyYAML')
@@ -54,9 +55,15 @@ def set_properties(project):
     project.depends_on('simplejson')
     project.depends_on('pyrpm')
 
+    project.set_property('dir_dist_scripts', 'scripts')
+
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').append('setup.cfg')
-    project.set_property('dir_dist_scripts', 'scripts')
+    project.get_property('copy_resources_glob').append('docs/man/yadtminion.1.man.gz')
+
+    #  install man page
+    for script in os.listdir('src/main/scripts'):
+        project.install_file('share/man/man1/%s' % script, 'docs/man/yadtminion.1.man.gz')
 
     project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults.yaml')
     project.install_file('/etc/default/', 'yadtminion/yadt')
