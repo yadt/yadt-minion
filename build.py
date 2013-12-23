@@ -14,7 +14,9 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybuilder.core import use_plugin, init, Author
+from pybuilder.core import use_plugin, init, Author, task
+from pybuilder.utils import assert_can_execute
+
 
 use_plugin('python.core')
 use_plugin('python.integrationtest')
@@ -80,3 +82,11 @@ def set_properties_for_teamcity_builds(project):
     project.default_task = ['install_build_dependencies', 'publish']
     project.set_property('install_dependencies_index_url', os.environ.get('PYPIPROXY_URL'))
     project.set_property('install_dependencies_use_mirrors', False)
+
+
+@task
+def generate_manpage_with_pandoc(project, logger):
+    assert_can_execute(['pandoc', '-v'], 'pandoc', 'generate_manpage_with_pandoc')
+    import subprocess
+    subprocess.check_output('pandoc -s -t man man-yadtminion.md -o docs/man/yadtminion.1.man', shell=True)
+    subprocess.check_output('rm -f docs/man/yadtminion.1.man.gz && gzip -9 docs/man/yadtminion.1.man', shell=True)
