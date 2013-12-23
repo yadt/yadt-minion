@@ -48,8 +48,8 @@ default_task = ['analyze', 'publish']
 @init
 def set_properties(project):
     import os
-    project.build_depends_on('mock')
 
+    project.build_depends_on('mock')
     project.depends_on('PyYAML')
     project.depends_on('netifaces')
     project.depends_on('simplejson')
@@ -59,11 +59,11 @@ def set_properties(project):
 
     project.set_property('copy_resources_target', '$dir_dist')
     project.get_property('copy_resources_glob').append('setup.cfg')
-    project.get_property('copy_resources_glob').append('docs/man/yadtminion.1.man.gz')
+    project.get_property('copy_resources_glob').append('docs/man/*')
 
-    #  install man page
-    for script in os.listdir('src/main/scripts'):
-        project.install_file('share/man/man1/%s' % script, 'docs/man/yadtminion.1.man.gz')
+    #  install man pages
+    for manpage in os.listdir('docs/man/'):
+        project.install_file('share/man/man1/', 'docs/man/%s' % manpage)
 
     project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults.yaml')
     project.install_file('/etc/default/', 'yadtminion/yadt')
@@ -93,7 +93,13 @@ def set_properties_for_teamcity_builds(project):
 
 @task
 def generate_manpage_with_pandoc(project, logger):
-    assert_can_execute(['pandoc', '-v'], 'pandoc', 'generate_manpage_with_pandoc')
+    import os
+    import shutil
     import subprocess
+    assert_can_execute(['pandoc', '-v'], 'pandoc', 'generate_manpage_with_pandoc')
     subprocess.check_output('pandoc -s -t man man-yadtminion.md -o docs/man/yadtminion.1.man', shell=True)
     subprocess.check_output('rm -f docs/man/yadtminion.1.man.gz && gzip -9 docs/man/yadtminion.1.man', shell=True)
+
+    for script in os.listdir('src/main/scripts'):
+        script_manpage = '%s.1.man.gz' % script
+        shutil.copyfile('docs/man/yadtminion.1.man.gz', 'docs/man/%s' % script_manpage)
