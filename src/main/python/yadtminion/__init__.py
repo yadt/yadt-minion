@@ -11,6 +11,7 @@ import netifaces
 import yaml
 import yum
 import yadtminion.yaml_merger
+from yadtminion import locking
 import rpm
 from rpmUtils.miscutils import stringToVersion
 
@@ -241,8 +242,7 @@ class Status(object):
         self.yumbase.conf.cache = not(is_root)
         self.yumdeps = YumDeps(self.yumbase)
         if is_root:
-            self.yumbase.doLock()  # auto-unlocks on __del__ and kills stale pids
-                                   # so it is totally safe to "just lock"
+            locking.try_to_acquire_yum_lock(self.yumbase)
 
         self.load_defaults_and_settings(only_config=False)
 
