@@ -3,6 +3,10 @@ import time
 import yum
 
 
+class CannotAcquireYumLockException(BaseException):
+    pass
+
+
 def try_to_acquire_yum_lock(yum_base):
     tries = 0
     max_tries = 10
@@ -19,4 +23,4 @@ def try_to_acquire_yum_lock(yum_base):
                 sys.stderr.write(message % (e.pid, tries, max_tries))
                 time.sleep(3)
             else:
-                raise yum.Errors.YumBaseError, "Another app (pid %s) is currently holding the yum lock" % e.pid
+                raise CannotAcquireYumLockException("Another app (pid %s) is currently holding the yum lock" % e.pid)
