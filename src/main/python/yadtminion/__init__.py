@@ -138,6 +138,8 @@ class Status(object):
         with open(filename) as f:
             service_defs = yaml.load(f)
         services = {}
+        if not service_defs:
+            return services
         for service_def in service_defs:
             try:
                 name = service_def.keys()[0]
