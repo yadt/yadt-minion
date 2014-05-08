@@ -256,8 +256,11 @@ class Status(object):
             init_script = '/etc/init.d/%s' % name
             service_artefact = self.yumdeps.get_service_artefact(init_script)
             service['name'] = name
-            if service_artefact:
+            if os.path.exists(init_script):
                 service['init_script'] = init_script
+            else:
+                service['state_handling'] = 'serverside'
+            if service_artefact:
                 service['service_artefact'] = service_artefact
                 toplevel_artefacts = self.yumdeps.get_all_whatrequires(
                     service_artefact)
@@ -267,8 +270,6 @@ class Status(object):
                         self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
                 service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
                     self.artefacts_filter, toplevel_artefacts)))
-            else:
-                service['state_handling'] = 'serverside'
 
         self.add_services_ignore()
         self.add_services_states()
