@@ -8,9 +8,10 @@ WHO=${WHO:-$(whoami)@localhost}
 HOST_LOCKFILE=$YADT_LOCK_DIR/host.lock
 
 if [[ -e $HOST_LOCKFILE ]] && ! grep -q "^owner: $WHO$" $HOST_LOCKFILE; then
-    echo "host locked!" >&2
     cat $HOST_LOCKFILE >&2
-    [[ -n $FORCE ]] && echo "unignore has no force option; consider using yadt-host-lock with force option instead" >&2
+    echo "You do not own the lock for this host." >&2
+    echo "If you want to unlock this host, first use 'lock --force' to acquire the lock and then use 'unlock' to release it." >&2
+    [[ -n $FORCE ]] && echo "'unlock' has no '--force' option; consider using 'lock --force' instead" >&2
     exit $YADT_EXITCODE_HOST_LOCKED
 fi
 
