@@ -242,13 +242,13 @@ class Status(object):
         self.yumbase.preconf.errorlevel = 0
         self.yumbase.preconf.debuglevel = 0
         self.yumbase.conf.cache = not(is_root)
-        self.yumdeps = YumDeps(self.yumbase)
         if is_root:
             try:
                 locking.try_to_acquire_yum_lock(self.yumbase)
             except locking.CannotAcquireYumLockException as e:
                 sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
                 sys.exit(1)
+        self.yumdeps = YumDeps(self.yumbase)
 
         self.load_defaults_and_settings(only_config=False)
 
