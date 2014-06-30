@@ -309,8 +309,6 @@ class Status(object):
         now = datetime.datetime.now()
         self.date = str(now)
         self.epoch = round(float(now.strftime('%s')))
-        self.ip = socket.gethostbyname(socket.gethostname())
-
         self.interface = {}
         for interface in netifaces.interfaces():
             if interface == 'lo':
