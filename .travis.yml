@@ -8,6 +8,7 @@ python:
 
 before_install:
  - sudo apt-get install yum
+ - sudo rpm --initdb --dbpath /.rpmdb
 
 install:
   - pip install pybuilder
