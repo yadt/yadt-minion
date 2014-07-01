@@ -1,5 +1,5 @@
 # yadt-minion
-
+[![Build Status](https://travis-ci.org/yadt/yadt-minion.svg?branch=master)](https://travis-ci.org/yadt/yadt-minion)
 # Developer setup : install dependencies and build the project
 You will need to install yum to access the python bindings.
 ```bash
