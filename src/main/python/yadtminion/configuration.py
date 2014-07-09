@@ -1,11 +1,12 @@
 import yadtminion
 from yadtminion import Status
+import os
 
 
 def load_yadt_defaults():
-    try:
+    if os.path.isfile('/etc/yadt.services'):
         return load_yadt_defaults_oldstyle()
-    except BaseException:
+    else:
         return load_yadt_defaults_newstyle()
 
 
