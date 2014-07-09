@@ -4,7 +4,7 @@ import os
 
 
 def load_yadt_defaults():
-    if os.path.exists('/etc/yadt.services'):
+    if os.path.isfile('/etc/yadt.services'):
         return load_yadt_defaults_oldstyle()
     else:
         return load_yadt_defaults_newstyle()
