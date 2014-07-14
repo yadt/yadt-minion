@@ -223,9 +223,13 @@ class Status(object):
             return '%s/%s' % (name, version) if epoch == '0' else '%s/%s:%s' % (name, epoch, version)
 
     def next_artefacts_need_reboot(self):
-        result = []
-        result.extend(set([a.split("/", 1)[0] for a in self.next_artefacts.keys()])
-                      & set(self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])))
+        provides_inducing_reboot = self.settings.get('ARTEFACTS_INDUCING_REBOOT', [])
+        updates = set([a.split("/", 1)[0] for a in self.next_artefacts.keys()])
+        packages_inducing_reboot = []
+        for provide in provides_inducing_reboot:
+            packages_inducing_reboot.extend(map(lambda pkg: pkg.name, self.yumbase.rpmdb.getProvides(provide).keys()))
+        packages_inducing_reboot = set(packages_inducing_reboot)
+        result = updates & packages_inducing_reboot
         return result
 
     def __init__(self, only_config=False):
