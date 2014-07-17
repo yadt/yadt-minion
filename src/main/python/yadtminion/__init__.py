@@ -227,7 +227,7 @@ class Status(object):
         updates = set([a.split("/", 1)[0] for a in self.next_artefacts.keys()])
         packages_inducing_reboot = []
         for provide in provides_inducing_reboot:
-            packages_inducing_reboot.extend(map(lambda pkg: pkg.name, self.yumbase.rpmdb.getProvides(provide).keys()))
+            packages_inducing_reboot.extend([pkg.name for pkg in self.yumbase.rpmdb.getProvides(provide).keys()])
         packages_inducing_reboot = set(packages_inducing_reboot)
         result = list(updates.intersection(packages_inducing_reboot))
         return result
