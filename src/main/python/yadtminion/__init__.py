@@ -229,7 +229,7 @@ class Status(object):
         for provide in provides_inducing_reboot:
             packages_inducing_reboot.extend(map(lambda pkg: pkg.name, self.yumbase.rpmdb.getProvides(provide).keys()))
         packages_inducing_reboot = set(packages_inducing_reboot)
-        result = list(updates & packages_inducing_reboot)
+        result = list(updates.intersection(packages_inducing_reboot))
         return result
 
     def __init__(self, only_config=False):
