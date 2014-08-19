@@ -1,5 +1,5 @@
 #   YADT - an Augmented Deployment Tool
-#   Copyright (C) 2010-2013  Immobilien Scout GmbH
+#   Copyright (C) 2010-2014  Immobilien Scout GmbH
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ name = 'yadt-minion'
 license = 'GNU GPL v3'
 summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
-version = '0.3'
+version = '0.4'
 
 default_task = ['analyze', 'publish']
 

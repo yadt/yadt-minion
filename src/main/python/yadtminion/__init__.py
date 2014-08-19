@@ -110,10 +110,11 @@ class YumDeps(object):
     def load_all_updates(self):
         if not self.all_updates:
             self.all_updates = {}
-            ups = yum.rpmUtils.updates.Updates(
-                self.yumbase.rpmdb.simplePkgList(), self.yumbase.pkgSack.simplePkgList())
+
+            ups = self.yumbase._getUpdates()
             ups.doUpdates()
             ups.condenseUpdates()
+
             for up in ups.getUpdatesTuples():
                 new_pkg = YumDeps.get_id(self.yumbase.getPackageObject(up[0]))
                 try:
@@ -122,6 +123,15 @@ class YumDeps(object):
                 except yum.Errors.DepError:
                     old_pkg = self._convert_package_tuple_to_id(up[1])
                 self.all_updates[new_pkg] = old_pkg
+            for ob in ups.getObsoletesTuples():
+                new_pkg = YumDeps.get_id(self.yumbase.getPackageObject(ob[0]))
+                try:
+                    old_pkg = YumDeps.get_id(
+                        self.yumbase.getPackageObject(ob[1]))
+                except yum.Errors.DepError:
+                    old_pkg = self._convert_package_tuple_to_id(ob[1])
+                self.all_updates[new_pkg] = old_pkg
+
         return self.all_updates
 
     def _convert_package_tuple_to_id(self, _tuple):
