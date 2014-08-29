@@ -29,7 +29,7 @@ The ```yadtshell```(server part) controls hosts with a ```yadt-minion```(client 
 ```bash
 git clone https://github.com/yadt/yadt-minion
 cd yadt-minion
-virtualenv venv
+virtualenv venv --system-site-packages
 . venv/bin/activate
 pip install pybuilder
 pyb install_dependencies
@@ -42,9 +42,6 @@ src
 ├── integrationtest
 │   ├── python # here you can find the integration tests, the tests have to end with ```*_tests.py```
 │   └── resources
-│       ├── recursive_dicts
-│       ├── two_nonoverlapping_dicts
-│       └── two_overlapping_dicts
 └── main
     ├── python
     │   └── yadtminion # here you can find the program modules
