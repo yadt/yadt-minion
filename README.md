@@ -1,4 +1,4 @@
-# [YADT-minion]{http://yadt-project.org}
+# [YADT-minion](http://yadt-project.org)
 [![Build Status](https://travis-ci.org/yadt/yadt-minion.svg?branch=master)](https://travis-ci.org/yadt/yadt-minion)
 
 # try-it-out
@@ -65,7 +65,7 @@ pyb analyze
 ### generating a setup.py
 ```bash
 pyb
-cd target/dist/yadtminion-$VERSION
+cd target/dist/yadt-minion-$VERSION
 ./setup.py <whatever you want>
 ```
 
@@ -75,8 +75,6 @@ pyb
 ```
 
 ## find help
-
-[wiki](https://github.com/yadt/yadtshell/wiki/)
 
 [issues page](https://github.com/yadt/yadt-minion/issues)
 
