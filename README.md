@@ -1,7 +1,7 @@
 # [YADT-minion](http://yadt-project.org)
 [![Build Status](https://travis-ci.org/yadt/yadt-minion.svg?branch=master)](https://travis-ci.org/yadt/yadt-minion)
 
-# try-it-out
+# try it out
 
 If you want to try out how ```yadt``` works, please check out our [how to](https://github.com/yadt/try-it-yourself) and the [project](http://www.yadt-project.org/) page.
 
