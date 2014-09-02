@@ -48,6 +48,12 @@ src
     └── scripts # for the executable scripts
 ```
 
+### create packages database for yum
+  
+```bash
+sudo rpm --initdb --dbpath /.rpmdb
+```
+
 ### running the tests
 ```bash
 pyb verify
