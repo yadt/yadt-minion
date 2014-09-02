@@ -19,6 +19,7 @@ The ```yadtshell```(server part) controls hosts with a ```yadt-minion```(client 
 ### prerequisites
 - ```git```
 - ```python 2.6/2.7```
+- ```python-dev```
 - ```virtualenv```
 - ```yum```
 (RHEL based Operating system or install yum via package management, **no chance on MacOS**
