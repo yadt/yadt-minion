@@ -69,7 +69,6 @@ def set_properties(project):
         project.install_file('share/man/man1/', 'docs/man/%s' % manpage)
 
     project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults.yaml')
-    project.install_file('/etc/default/', 'yadtminion/yadt')
 
     project.get_property('distutils_commands').append('bdist_rpm')
     project.set_property('distutils_classifiers', [

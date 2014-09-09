@@ -144,24 +144,6 @@ class YumDeps(object):
 
 class Status(object):
 
-    def load_services_oldstyle(self, filename):
-        with open(filename) as f:
-            service_defs = yaml.load(f)
-        services = {}
-        if not service_defs:
-            return services
-        for service_def in service_defs:
-            try:
-                name = service_def.keys()[0]
-                service = service_def.get(name)
-                if not service:
-                    service = {}
-                service['name'] = name
-                services[name] = service
-            except BaseException, e:
-                print >> sys.stderr, e
-        return services
-
     def load_services(self, d):
         try:
             services = {}
@@ -188,21 +170,9 @@ class Status(object):
             setattr(self, key, value)
 
     def load_defaults_and_settings(self, only_config=False):
-        try:
-            # TODO to be removed in the near future
-            self.defaults = Status.load_defaults()
-            self.services = self.load_services_oldstyle(
-                self.defaults.get('YADT_SERVICES_FILE'))
-            self.settings = {}
-        except IOError, e:
-                if e.errno == 2:
-                    self.load_settings()
-                else:
-                    raise RuntimeError(
-                        'Can not determine configuration : %s' % str(e))
-        except KeyError, e:
-            print >> sys.stderr, e
-            self.load_settings()
+        if os.path.isfile('/etc/yadt.services'):
+            raise RuntimeError("/etc/yadt.services is unsupported, please migrate to /etc/yadt.conf.d : https://github.com/yadt/yadtshell/wiki/Host-Configuration")
+        self.load_settings()
 
         if not self.services:
             print >> sys.stderr, 'no service definitions found, skipping service handling'
@@ -341,12 +311,6 @@ class Status(object):
                                               'yumdeps',
                                               'service_defs',
                                               'artefacts_filter']]
-
-    @classmethod
-    def load_defaults(clazz):
-        defaults = {}
-        execfile('/etc/default/yadt', globals(), defaults)
-        return defaults
 
     def add_services_states(self):
         for service in self.services.values():
