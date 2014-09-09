@@ -144,24 +144,6 @@ class YumDeps(object):
 
 class Status(object):
 
-    def load_services(self, d):
-        try:
-            services = {}
-            lines = []
-            for filename in os.listdir(d):
-                with open(os.path.join(d, filename)) as f:
-                    lines.extend(f.readlines())
-            service_defs = yaml.load(''.join(lines))
-            for name, service in service_defs.iteritems():
-                if not service:
-                    service = {}
-                service['name'] = name
-                services[name] = service
-            return services
-        except BaseException, e:
-            print >> sys.stderr, e
-        return {}
-
     def load_settings(self):
         _settings = yadtminion.yaml_merger.merge_yaml_files(
             '/etc/yadt.conf.d/')
