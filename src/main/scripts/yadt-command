@@ -25,6 +25,7 @@ def tee(line, tos):
 
 def cmd(args):
     defaults = load_yadt_defaults()
+
     log_dir = defaults['YADT_LOG_DIR']
 
     log_file_name = os.environ.get('YADT_LOG_FILE', None)

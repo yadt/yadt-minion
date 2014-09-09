@@ -153,7 +153,8 @@ class Status(object):
 
     def load_defaults_and_settings(self, only_config=False):
         if os.path.isfile('/etc/yadt.services'):
-            raise RuntimeError("/etc/yadt.services is unsupported, please migrate to /etc/yadt.conf.d : https://github.com/yadt/yadtshell/wiki/Host-Configuration")
+            sys.stderr.write("/etc/yadt.services is unsupported, please migrate to /etc/yadt.conf.d : https://github.com/yadt/yadtshell/wiki/Host-Configuration\n")
+            sys.exit(1)
         self.load_settings()
 
         if not self.services:
