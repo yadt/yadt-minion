@@ -7,6 +7,6 @@
     'YADT_EXITCODE_HOST_REBOOT_TIMEOUT': 152
   },
   'settings': {
-    'ARTEFACTS_INDUCING_REBOOT': ['kernel']
+    'ARTEFACTS_INDUCING_REBOOT': ['kernel','glibc']
   }
 }
