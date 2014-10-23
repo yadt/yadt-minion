@@ -10,7 +10,12 @@ is_already_running() {
 
 if ! is_already_running; then
     echo "starting $SERVICE"
-    sudo service $SERVICE start
+    if [ "7" -eq $RELEASEVER ]
+    then
+        sudo systemctl start $SERVICE
+    else
+        sudo service $SERVICE start
+    fi
     exit
 fi
 
