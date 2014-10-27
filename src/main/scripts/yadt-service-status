@@ -3,7 +3,7 @@ set -e -E -C -u -o pipefail
 
 export YADT_SERVICE=${1:?no YADT_SERVICE specified}
 
-if [ "$RELEASEVER" == "7" ]; then
+if [[ $RELEASEVER == "7"* ]]; then
     sudo systemctl status $YADT_SERVICE
 else
     sudo service $YADT_SERVICE status
