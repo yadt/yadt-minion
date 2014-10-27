@@ -25,7 +25,8 @@ def tee(line, tos):
 
 
 def get_yum_releasever():
-    yb = yum.YumBase() #TODO disable plugins
+    yb = yum.YumBase()
+    yb.doConfigSetup(init_plugins=False)
     return yb.conf.yumvar['releasever']
 
 
