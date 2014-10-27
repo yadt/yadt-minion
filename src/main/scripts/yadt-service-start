@@ -10,7 +10,7 @@ is_already_running() {
 
 if ! is_already_running; then
     echo "starting $SERVICE"
-    if [ "7" -eq $RELEASEVER ]
+    if [ "$RELEASEVER" -eq "7" ]
     then
         sudo systemctl start $SERVICE
     else
