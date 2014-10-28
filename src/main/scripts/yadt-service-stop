@@ -4,4 +4,8 @@ set -e -E -C -u -o pipefail
 export SERVICE=${1:?no SERVICE specified}
 . yadt-service-checkaccess
 
-sudo service $SERVICE stop
+if [[ $RELEASEVER == "7"* ]]; then
+    sudo systemctl stop $SERVICE
+else
+    sudo service $SERVICE stop
+fi

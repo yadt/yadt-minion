@@ -13,7 +13,7 @@ if [[ -n $@ ]]; then
 fi
 
 if [[ "$opts" == "r" ]]; then
-    sudo $(which reboot)
+    sudo $(whereis -b reboot | cut -d: -f2)
     sleep 42
     exit $YADT_EXITCODE_HOST_REBOOT_TIMEOUT
 fi

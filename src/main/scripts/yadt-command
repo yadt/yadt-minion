@@ -5,6 +5,7 @@ import subprocess
 import sys
 import select
 import errno
+import yum
 
 from yadtminion.configuration import load_yadt_defaults
 
@@ -21,6 +22,12 @@ def tee(line, tos):
     for to in tos:
         to.write(line)
         to.flush()
+
+
+def get_yum_releasever():
+    yb = yum.YumBase()
+    yb.doConfigSetup(init_plugins=False)
+    return yb.conf.yumvar['releasever']
 
 
 def cmd(args):
@@ -79,6 +86,7 @@ def cmd(args):
 def _setup_environment(defaults):
     for key, value in defaults.iteritems():
         os.environ[key] = str(value)
+    os.environ["RELEASEVER"] = get_yum_releasever()
 
 if __name__ == '__main__':
     cmd(sys.argv[1:])
