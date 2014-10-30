@@ -43,7 +43,7 @@ name = 'yadt-minion'
 license = 'GNU GPL v3'
 summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
-version = '0.4'
+version = '0.5'
 
 default_task = ['analyze', 'publish']
 
