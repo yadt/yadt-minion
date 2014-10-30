@@ -269,16 +269,8 @@ class Status(object):
         self.uptime = float(f.readline().split()[0])
         self.running_kernel = 'kernel/' + platform.uname()[2]
         self.latest_kernel = self.determine_latest_kernel()
-        if not self.latest_kernel or self.running_kernel == self.latest_kernel:
-            self.reboot_required_to_activate_latest_kernel = False
-        else:
-            latest_kernel_version = stringToVersion(self.latest_kernel.replace('/', '-'))
-            running_kernel_version = stringToVersion(self.latest_kernel.replace('/', '-'))
-            comparison_result = rpm.labelCompare(latest_kernel_version, running_kernel_version)
-            if comparison_result > 0:
-                self.reboot_required_to_activate_latest_kernel = True
-            else:
-                self.reboot_required_to_activate_latest_kernel = False
+        self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
+                                                          if self.latest_kernel else False)
         self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
         if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
             self.ssh_poll_max_seconds = self.settings.get(
