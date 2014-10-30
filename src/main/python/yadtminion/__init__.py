@@ -176,8 +176,12 @@ class Status(object):
         kernel_artefacts = sorted(
             map(
                 stringToVersion,
-                [a.replace('/', '-')
-                 for a in self.current_artefacts if a.startswith('kernel/')]
+                [a.replace('/', '-').replace('kernel-uek', 'kernel')
+                 for a in self.current_artefacts
+                    if (
+                        a.startswith('kernel/')
+                        or a.startswith('kernel-uek/'))
+                 ]
             ),
             cmp=rpm.labelCompare, reverse=True)
 
