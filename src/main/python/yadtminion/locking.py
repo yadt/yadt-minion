@@ -9,7 +9,7 @@ class CannotAcquireYumLockException(BaseException):
 
 def try_to_acquire_yum_lock(yum_base):
     tries = 0
-    max_tries = 10
+    max_tries = 25
     while True:
         tries += 1
         try:
