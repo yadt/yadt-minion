@@ -160,9 +160,12 @@ class Status(object):
         if not self.services:
             print >> sys.stderr, 'no service definitions found, skipping service handling'
 
-        for name in self.services:
+        for name in self.services.keys():
             if self.services[name] is None:
                 self.services[name] = {}
+            if "unmanaged" in self.services[name] and self.services[name]["unmanaged"]:
+                del self.services[name]
+
 
         if only_config:
             return
