@@ -71,7 +71,6 @@ def set_properties(project):
 
     project.install_file('/etc/yadt.conf.d/', 'yadtminion/00_defaults.yaml')
 
-    project.get_property('distutils_commands').append('bdist_rpm')
     project.set_property('distutils_classifiers', [
         'Development Status :: 4 - Beta',
         'Environment :: Console',
