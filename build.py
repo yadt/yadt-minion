@@ -31,7 +31,8 @@ use_plugin('copy_resources')
 
 authors = [Author('Arne Hilmann', 'arne.hilmann@gmail.com'),
            Author('Maximilien Riehl', 'max@riehl.io'),
-           Author('Marcel Wolf', 'marcel.wolf@me.com')]
+           Author('Marcel Wolf', 'marcel.wolf@me.com'),
+           Author('Schlomo Schapiro','schlomo+yadt@schapiro.org')]
 
 description = """YADT - an Augmented Deployment Tool - The Minion Part
 - yadt-status: collects all relevant information for a single host
