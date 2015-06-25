@@ -153,7 +153,9 @@ class Status(object):
 
     def load_defaults_and_settings(self, only_config=False):
         if os.path.isfile('/etc/yadt.services'):
-            sys.stderr.write("/etc/yadt.services is unsupported, please migrate to /etc/yadt.conf.d : https://github.com/yadt/yadtshell/wiki/Host-Configuration\n")
+            sys.stderr.write("/etc/yadt.services is unsupported, please "
+                             "migrate to /etc/yadt.conf.d : "
+                             "https://github.com/yadt/yadtshell/wiki/Host-Configuration\n")
             sys.exit(1)
         self.load_settings()
 
@@ -165,7 +167,6 @@ class Status(object):
                 self.services[name] = {}
             if "unmanaged" in self.services[name] and self.services[name]["unmanaged"]:
                 del self.services[name]
-
 
         if only_config:
             return
