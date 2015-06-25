@@ -65,6 +65,9 @@ def set_properties(project):
     project.get_property('copy_resources_glob').append('setup.cfg')
     project.get_property('copy_resources_glob').append('docs/man/*')
 
+    project.set_property("integrationtest_inherit_environment", True)
+
+
     #  install man pages
     for manpage in os.listdir('docs/man/'):
         project.install_file('share/man/man1/', 'docs/man/%s' % manpage)
