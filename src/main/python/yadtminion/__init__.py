@@ -291,7 +291,7 @@ class Status(object):
             try:
                 for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
                     self.interface[interface].append(link['addr'])
-            except:
+            except Exception:
                 pass
             self.interface[interface] = ' '.join(self.interface[interface])
 
