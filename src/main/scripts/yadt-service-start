@@ -4,11 +4,12 @@ set -e -E -C -u -o pipefail
 export SERVICE=${1:?no SERVICE specified}
 . yadt-service-checkaccess
 
-is_already_running() {
+is_already_starting() {
+    # Only for SysV init, in case someone has broken init scripts.
     pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
 }
 
-if ! is_already_running; then
+if ! is_already_starting; then
     echo "starting $SERVICE"
     if [[ $RELEASEVER == "7"* ]]
     then
@@ -19,7 +20,7 @@ if ! is_already_running; then
     exit
 fi
 
-while is_already_running; do
+while is_already_starting; do
     echo "service $SERVICE is starting already, checking again in 2 seconds" >&2
     sleep 2
 done
