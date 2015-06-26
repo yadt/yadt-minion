@@ -241,11 +241,7 @@ class Status(object):
         self.yumdeps.load_all_updates()
         for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
             self.updates[a] = self.yumdeps.all_updates[a]
-
-        if len(self.updates):
-            self.state = 'update_needed'
-        else:
-            self.state = 'uptodate'
+        self.state = 'update_needed' if self.updates else 'uptodate'
 
         self.lockstate = self.get_lock_state()
 
