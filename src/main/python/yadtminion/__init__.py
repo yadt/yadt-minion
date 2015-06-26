@@ -227,25 +227,7 @@ class Status(object):
 
         self.load_defaults_and_settings(only_config=False)
 
-        for name, service in self.services.iteritems():
-            init_script = '/etc/init.d/%s' % name
-            service_artefact = self.yumdeps.get_service_artefact(init_script)
-            service['name'] = name
-            if os.path.exists(init_script):
-                service['init_script'] = init_script
-            else:
-                service['state_handling'] = 'serverside'
-            if service_artefact:
-                service['service_artefact'] = service_artefact
-                toplevel_artefacts = self.yumdeps.get_all_whatrequires(
-                    service_artefact)
-                service['toplevel_artefacts'] = toplevel_artefacts
-                service.setdefault('needs_artefacts', []).extend(
-                    map(self.yumdeps.strip_version, filter(
-                        self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
-                service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
-                    self.artefacts_filter, toplevel_artefacts)))
-
+        self.setup_services()
         self.add_services_ignore()
         self.add_services_states()
         self.add_services_extra()
@@ -302,6 +284,26 @@ class Status(object):
                                               'yumdeps',
                                               'service_defs',
                                               'artefacts_filter']]
+
+    def setup_services(self):
+        for name, service in self.services.iteritems():
+            init_script = '/etc/init.d/%s' % name
+            service_artefact = self.yumdeps.get_service_artefact(init_script)
+            service['name'] = name
+            if os.path.exists(init_script):
+                service['init_script'] = init_script
+            else:
+                service['state_handling'] = 'serverside'
+            if service_artefact:
+                service['service_artefact'] = service_artefact
+                toplevel_artefacts = self.yumdeps.get_all_whatrequires(
+                    service_artefact)
+                service['toplevel_artefacts'] = toplevel_artefacts
+                service.setdefault('needs_artefacts', []).extend(
+                    map(self.yumdeps.strip_version, filter(
+                        self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
+                service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
+                    self.artefacts_filter, toplevel_artefacts)))
 
     def add_services_states(self):
         for service in self.services.values():
