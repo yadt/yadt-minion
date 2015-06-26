@@ -177,16 +177,11 @@ class Status(object):
         self._determine_stop_artefacts()
 
     def determine_latest_kernel(self):
+        kernels = [a.replace('/', '-').replace('kernel-uek', 'kernel')
+                   for a in self.current_artefacts
+                   if a.startswith(('kernel/', 'kernel-uek/'))]
         kernel_artefacts = sorted(
-            map(
-                stringToVersion,
-                [a.replace('/', '-').replace('kernel-uek', 'kernel')
-                 for a in self.current_artefacts
-                    if (
-                        a.startswith('kernel/')
-                        or a.startswith('kernel-uek/'))
-                 ]
-            ),
+            map(stringToVersion, kernels),
             cmp=rpm.labelCompare, reverse=True)
 
         if kernel_artefacts:
