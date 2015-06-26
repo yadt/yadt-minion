@@ -285,15 +285,19 @@ class Status(object):
                                               'service_defs',
                                               'artefacts_filter']]
 
+    def get_service_init_details(self, service):
+        init_script = '/etc/init.d/%s' % service['name']
+        service_artefact = self.yumdeps.get_service_artefact(init_script)
+        if os.path.exists(init_script):
+            service['init_script'] = init_script
+        else:
+            service['state_handling'] = 'serverside'
+        return service_artefact
+
     def setup_services(self):
         for name, service in self.services.iteritems():
-            init_script = '/etc/init.d/%s' % name
-            service_artefact = self.yumdeps.get_service_artefact(init_script)
             service['name'] = name
-            if os.path.exists(init_script):
-                service['init_script'] = init_script
-            else:
-                service['state_handling'] = 'serverside'
+            service_artefact = self.get_service_init_details(service)
             if service_artefact:
                 service['service_artefact'] = service_artefact
                 toplevel_artefacts = self.yumdeps.get_all_whatrequires(
