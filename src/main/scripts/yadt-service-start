@@ -15,11 +15,11 @@ if ! is_already_starting; then
     then
         sudo systemctl start $SERVICE
     else
-        eval $(yadt-service-init-type $YADT_SERVICE)
+        eval $(yadt-service-init-type $SERVICE)
         if [[ $YADT_INIT_TYPE == "sysv" ]]; then
-            sudo service $YADT_SERVICE start
+            sudo service $SERVICE start
         elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
-            sudo initctl start $YADT_SERVICE
+            sudo initctl start $SERVICE
         fi
     fi
     exit
