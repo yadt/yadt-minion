@@ -312,7 +312,7 @@ class Status(object):
         return init_script, init_type
 
     def get_service_init_details(self, service):
-        init_script, init_type = self.get_init_type(service['name'])
+        init_script, init_type = self.get_init_script_and_type(service['name'])
         if init_script:
             service_artefact = self.yumdeps.get_service_artefact(init_script)
             service['init_script'] = init_script
