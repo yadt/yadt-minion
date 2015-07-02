@@ -6,5 +6,10 @@ export YADT_SERVICE=${1:?no YADT_SERVICE specified}
 if [[ $RELEASEVER == "7"* ]]; then
     sudo systemctl status $YADT_SERVICE
 else
-    sudo service $YADT_SERVICE status
+    eval $(yadt-service-init-type $YADT_SERVICE)
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        sudo service $YADT_SERVICE status
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        sudo initctl status $YADT_SERVICE
+    fi
 fi
