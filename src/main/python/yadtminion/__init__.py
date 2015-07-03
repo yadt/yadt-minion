@@ -277,15 +277,17 @@ class Status(object):
                                               'artefacts_filter']]
 
     @staticmethod
-    def get_init_script_and_type(service_name):
+    def get_init_scripts_and_type(service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
         upstart_init_script = '/etc/init/%s.conf' % service_name
+        upstart_override = '/etc/init/%s.override' % service_name
         try:
             chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
         except Exception:
             chkconfig_result = None
         sysv_exists = os.path.exists(sysv_init_script)
         upstart_exists = os.path.exists(upstart_init_script)
+        override_exists = os.path.exists(upstart_override)
 
         if chkconfig_result:
             init_type = "sysv"
@@ -303,38 +305,51 @@ class Status(object):
                 init_type = "serverside"
 
         if init_type == "sysv":
-            init_script = sysv_init_script
+            init_scripts = (sysv_init_script,)
         elif init_type == "upstart":
-            init_script = upstart_init_script
+            if override_exists:
+                init_scripts = (upstart_init_script, upstart_override)
+            else:
+                init_scripts = (upstart_init_script,)
         else:
-            init_script = ""
+            init_scripts = tuple()
 
-        return init_script, init_type
+        return init_scripts, init_type
 
     def get_service_init_details(self, service):
-        init_script, init_type = self.get_init_script_and_type(service['name'])
-        if init_script:
-            service_artefact = self.yumdeps.get_service_artefact(init_script)
-            service['init_script'] = init_script
+        init_scripts, init_type = self.get_init_scripts_and_type(service['name'])
+        if init_scripts:
+            service_artefacts = [
+                        self.yumdeps.get_service_artefact(init_script)
+                        for init_script in init_scripts]
+            # Unpackaged files give None as service_artefact, filter those out.
+            service_artefacts = filter(bool, service_artefacts)
+
+            service['init_script'] = init_scripts
             service['init_type'] = init_type
         else:
             service['state_handling'] = init_type
-            service_artefact = None
+            service_artefacts = []
 
-        return service_artefact
+        return service_artefacts
 
     def setup_services(self):
         for name, service in self.services.iteritems():
             service['name'] = name
-            service_artefact = self.get_service_init_details(service)
-            if service_artefact:
-                service['service_artefact'] = service_artefact
-                toplevel_artefacts = self.yumdeps.get_all_whatrequires(
-                    service_artefact)
-                service['toplevel_artefacts'] = toplevel_artefacts
-                service.setdefault('needs_artefacts', []).extend(
-                    map(self.yumdeps.strip_version, filter(
-                        self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
+            service_artefacts = self.get_service_init_details(service)
+            print "artefacts for service {0}: {1}".format(service, service_artefacts)
+            if service_artefacts:
+                service['service_artefact'] = service_artefacts
+                service.setdefault('needs_artefacts', [])
+                toplevel_artefacts = set()
+                for artefact in service_artefacts:
+                    toplevel_artefacts.update(self.yumdeps.get_all_whatrequires(artefact))
+                    print "handling artefact", artefact
+                    service['needs_artefacts'].extend(
+                        map(self.yumdeps.strip_version, filter(
+                            self.artefacts_filter, self.yumdeps.get_all_requires(artefact))))
+                service['toplevel_artefacts'] = list(toplevel_artefacts)
+
                 service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
                     self.artefacts_filter, toplevel_artefacts)))
 
