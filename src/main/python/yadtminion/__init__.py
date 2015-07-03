@@ -400,7 +400,8 @@ class Status(object):
 
     def host_is_up_to_date(self):
         status = self.get_status()
-        return False if status['next_artefacts'] else True
+        pending_updates = status['next_artefacts']
+        return not pending_updates
 
     def get_status(self):
         return dict(filter(lambda item: item[0] in self.structure_keys, self.__dict__.iteritems()))
