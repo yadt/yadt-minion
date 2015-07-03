@@ -337,14 +337,12 @@ class Status(object):
         for name, service in self.services.iteritems():
             service['name'] = name
             service_artefacts = self.get_service_init_details(service)
-            print "artefacts for service {0}: {1}".format(service, service_artefacts)
             if service_artefacts:
                 service['service_artefact'] = service_artefacts
                 service.setdefault('needs_artefacts', [])
                 toplevel_artefacts = set()
                 for artefact in service_artefacts:
                     toplevel_artefacts.update(self.yumdeps.get_all_whatrequires(artefact))
-                    print "handling artefact", artefact
                     service['needs_artefacts'].extend(
                         map(self.yumdeps.strip_version, filter(
                             self.artefacts_filter, self.yumdeps.get_all_requires(artefact))))
