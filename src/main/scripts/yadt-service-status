@@ -10,6 +10,8 @@ else
     if [[ $YADT_INIT_TYPE == "sysv" ]]; then
         sudo service $SERVICE status
     elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
-        sudo initctl status $SERVICE
+        if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+            exit 3
+        fi
     fi
 fi

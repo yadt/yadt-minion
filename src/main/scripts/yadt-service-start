@@ -19,7 +19,9 @@ if ! is_already_starting; then
         if [[ $YADT_INIT_TYPE == "sysv" ]]; then
             sudo service $SERVICE start
         elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
-            sudo initctl start $SERVICE
+            if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+                sudo initctl start $SERVICE
+            fi
         fi
     fi
     exit
