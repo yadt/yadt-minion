@@ -320,8 +320,8 @@ class Status(object):
         init_scripts, init_type = self.get_init_scripts_and_type(service['name'])
         if init_scripts:
             service_artefacts = [
-                        self.yumdeps.get_service_artefact(init_script)
-                        for init_script in init_scripts]
+                self.yumdeps.get_service_artefact(init_script)
+                for init_script in init_scripts]
             # Unpackaged files give None as service_artefact, filter those out.
             service_artefacts = filter(bool, service_artefacts)
 
