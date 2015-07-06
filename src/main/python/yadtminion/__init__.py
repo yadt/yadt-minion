@@ -345,7 +345,7 @@ class Status(object):
                     toplevel_artefacts.update(self.yumdeps.get_all_whatrequires(artefact))
                     service['needs_artefacts'].extend(
                         map(self.yumdeps.strip_version, filter(
-                            self.artefacts_filter, self.yumdeps.get_all_requires(artefact))))
+                            self.artefacts_filter, self.yumdeps.get_all_requires([artefact]))))
                 service['toplevel_artefacts'] = list(toplevel_artefacts)
 
                 service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
