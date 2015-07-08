@@ -4,9 +4,14 @@ set -e -E -C -u -o pipefail
 export SERVICE=${1:?no SERVICE specified}
 . yadt-service-checkaccess
 
+eval $(yadt-service-init-type $SERVICE)
+
 is_already_starting() {
-    # Only for SysV init, in case someone has broken init scripts.
-    pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        sudo initctl status $SERVICE | grep "start/" | grep -qv "start/running"
+    fi
 }
 
 if ! is_already_starting; then
@@ -15,7 +20,6 @@ if ! is_already_starting; then
     then
         sudo systemctl start $SERVICE
     else
-        eval $(yadt-service-init-type $SERVICE)
         if [[ $YADT_INIT_TYPE == "sysv" ]]; then
             sudo service $SERVICE start
         elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
