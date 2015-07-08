@@ -298,7 +298,7 @@ class Status(object):
                 init_type = "sysv"
             else:
                 init_type = "serverside"
-        else:
+        elif chkconfig_result == False:
             if upstart_exists:
                 init_type = "upstart"
             else:
