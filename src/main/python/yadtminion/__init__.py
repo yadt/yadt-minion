@@ -281,24 +281,28 @@ class Status(object):
         sysv_init_script = '/etc/init.d/%s' % service_name
         upstart_init_script = '/etc/init/%s.conf' % service_name
         upstart_override = '/etc/init/%s.override' % service_name
-        try:
-            chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
-        except Exception:
-            chkconfig_result = None
         sysv_exists = os.path.exists(sysv_init_script)
         upstart_exists = os.path.exists(upstart_init_script)
         override_exists = os.path.exists(upstart_override)
 
-        if chkconfig_result:
+        try:
+            chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
+        except Exception:
+            chkconfig_result = None
+        chkconfig_success = True
+        chkconfig_failed = False
+        chkconfig_does_not_exist = None
+
+        if chkconfig_result == chkconfig_success:
             init_type = "sysv"
-        elif chkconfig_result is None:
+        elif chkconfig_result is chkconfig_does_not_exist:
             if upstart_exists:
                 init_type = "upstart"
             elif sysv_exists:
                 init_type = "sysv"
             else:
                 init_type = "serverside"
-        elif chkconfig_result == False:
+        elif chkconfig_result == chkconfig_failed:
             if upstart_exists:
                 init_type = "upstart"
             else:
