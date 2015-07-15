@@ -1,10 +1,17 @@
 #!/bin/bash
 set -e -E -C -u -o pipefail
 
-export YADT_SERVICE=${1:?no YADT_SERVICE specified}
+export SERVICE=${1:?no YADT_SERVICE specified}
 
 if [[ $RELEASEVER == "7"* ]]; then
-    sudo systemctl status $YADT_SERVICE
+    sudo systemctl status $SERVICE
 else
-    sudo service $YADT_SERVICE status
+    eval $(yadt-service-init-type $SERVICE)
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        sudo service $SERVICE status
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+            exit 3
+        fi
+    fi
 fi

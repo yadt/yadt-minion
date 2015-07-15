@@ -177,16 +177,11 @@ class Status(object):
         self._determine_stop_artefacts()
 
     def determine_latest_kernel(self):
+        kernels = [a.replace('/', '-').replace('kernel-uek', 'kernel')
+                   for a in self.current_artefacts
+                   if a.startswith(('kernel/', 'kernel-uek/'))]
         kernel_artefacts = sorted(
-            map(
-                stringToVersion,
-                [a.replace('/', '-').replace('kernel-uek', 'kernel')
-                 for a in self.current_artefacts
-                    if (
-                        a.startswith('kernel/')
-                        or a.startswith('kernel-uek/'))
-                 ]
-            ),
+            map(stringToVersion, kernels),
             cmp=rpm.labelCompare, reverse=True)
 
         if kernel_artefacts:
@@ -227,25 +222,7 @@ class Status(object):
 
         self.load_defaults_and_settings(only_config=False)
 
-        for name, service in self.services.iteritems():
-            init_script = '/etc/init.d/%s' % name
-            service_artefact = self.yumdeps.get_service_artefact(init_script)
-            service['name'] = name
-            if os.path.exists(init_script):
-                service['init_script'] = init_script
-            else:
-                service['state_handling'] = 'serverside'
-            if service_artefact:
-                service['service_artefact'] = service_artefact
-                toplevel_artefacts = self.yumdeps.get_all_whatrequires(
-                    service_artefact)
-                service['toplevel_artefacts'] = toplevel_artefacts
-                service.setdefault('needs_artefacts', []).extend(
-                    map(self.yumdeps.strip_version, filter(
-                        self.artefacts_filter, self.yumdeps.get_all_requires([service_artefact]))))
-                service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
-                    self.artefacts_filter, toplevel_artefacts)))
-
+        self.setup_services()
         self.add_services_ignore()
         self.add_services_states()
         self.add_services_extra()
@@ -259,11 +236,7 @@ class Status(object):
         self.yumdeps.load_all_updates()
         for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
             self.updates[a] = self.yumdeps.all_updates[a]
-
-        if len(self.updates):
-            self.state = 'update_needed'
-        else:
-            self.state = 'uptodate'
+        self.state = 'update_needed' if self.updates else 'uptodate'
 
         self.lockstate = self.get_lock_state()
 
@@ -302,6 +275,85 @@ class Status(object):
                                               'yumdeps',
                                               'service_defs',
                                               'artefacts_filter']]
+
+    @staticmethod
+    def get_init_scripts_and_type(service_name):
+        sysv_init_script = '/etc/init.d/%s' % service_name
+        upstart_init_script = '/etc/init/%s.conf' % service_name
+        upstart_override = '/etc/init/%s.override' % service_name
+        sysv_exists = os.path.exists(sysv_init_script)
+        upstart_exists = os.path.exists(upstart_init_script)
+        override_exists = os.path.exists(upstart_override)
+
+        try:
+            chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
+        except Exception:
+            chkconfig_result = None
+        chkconfig_success = True
+        chkconfig_failed = False
+        chkconfig_does_not_exist = None
+
+        if chkconfig_result == chkconfig_success:
+            init_type = "sysv"
+        elif chkconfig_result is chkconfig_does_not_exist:
+            if upstart_exists:
+                init_type = "upstart"
+            elif sysv_exists:
+                init_type = "sysv"
+            else:
+                init_type = "serverside"
+        elif chkconfig_result == chkconfig_failed:
+            if upstart_exists:
+                init_type = "upstart"
+            else:
+                init_type = "serverside"
+
+        if init_type == "sysv":
+            init_scripts = (sysv_init_script,)
+        elif init_type == "upstart":
+            if override_exists:
+                init_scripts = (upstart_init_script, upstart_override)
+            else:
+                init_scripts = (upstart_init_script,)
+        else:
+            init_scripts = tuple()
+
+        return init_scripts, init_type
+
+    def get_service_init_details(self, service):
+        init_scripts, init_type = self.get_init_scripts_and_type(service['name'])
+        if init_scripts:
+            service_artefacts = [
+                self.yumdeps.get_service_artefact(init_script)
+                for init_script in init_scripts]
+            # Unpackaged files give None as service_artefact, filter those out.
+            service_artefacts = filter(bool, service_artefacts)
+
+            service['init_script'] = init_scripts
+            service['init_type'] = init_type
+        else:
+            service['state_handling'] = init_type
+            service_artefacts = []
+
+        return service_artefacts
+
+    def setup_services(self):
+        for name, service in self.services.iteritems():
+            service['name'] = name
+            service_artefacts = self.get_service_init_details(service)
+            if service_artefacts:
+                service['service_artefact'] = service_artefacts
+                service.setdefault('needs_artefacts', [])
+                toplevel_artefacts = set()
+                for artefact in service_artefacts:
+                    toplevel_artefacts.update(self.yumdeps.get_all_whatrequires(artefact))
+                    service['needs_artefacts'].extend(
+                        map(self.yumdeps.strip_version, filter(
+                            self.artefacts_filter, self.yumdeps.get_all_requires([artefact]))))
+                service['toplevel_artefacts'] = list(toplevel_artefacts)
+
+                service['needs_artefacts'].extend(map(self.yumdeps.strip_version, filter(
+                    self.artefacts_filter, toplevel_artefacts)))
 
     def add_services_states(self):
         for service in self.services.values():
@@ -365,7 +417,8 @@ class Status(object):
 
     def host_is_up_to_date(self):
         status = self.get_status()
-        return False if status['next_artefacts'] else True
+        pending_updates = status['next_artefacts']
+        return not pending_updates
 
     def get_status(self):
         return dict(filter(lambda item: item[0] in self.structure_keys, self.__dict__.iteritems()))

@@ -4,22 +4,34 @@ set -e -E -C -u -o pipefail
 export SERVICE=${1:?no SERVICE specified}
 . yadt-service-checkaccess
 
-is_already_running() {
-    pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
+eval $(yadt-service-init-type $SERVICE)
+
+is_already_starting() {
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        sudo initctl status $SERVICE | grep "start/" | grep -qv "start/running"
+    fi
 }
 
-if ! is_already_running; then
+if ! is_already_starting; then
     echo "starting $SERVICE"
     if [[ $RELEASEVER == "7"* ]]
     then
         sudo systemctl start $SERVICE
     else
-        sudo service $SERVICE start
+        if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+            sudo service $SERVICE start
+        elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+            if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+                sudo initctl start $SERVICE
+            fi
+        fi
     fi
     exit
 fi
 
-while is_already_running; do
+while is_already_starting; do
     echo "service $SERVICE is starting already, checking again in 2 seconds" >&2
     sleep 2
 done

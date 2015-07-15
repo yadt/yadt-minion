@@ -7,5 +7,12 @@ export SERVICE=${1:?no SERVICE specified}
 if [[ $RELEASEVER == "7"* ]]; then
     sudo systemctl stop $SERVICE
 else
-    sudo service $SERVICE stop
+    eval $(yadt-service-init-type $SERVICE)
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        sudo service $SERVICE stop
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        if sudo initctl status $SERVICE | grep -qv "stop/waiting"; then
+            sudo initctl stop $SERVICE
+        fi
+    fi
 fi
