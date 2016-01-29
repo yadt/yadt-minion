@@ -6,6 +6,7 @@ import socket
 import datetime
 import stat
 import platform
+import sh
 
 import netifaces
 import yaml
@@ -198,6 +199,10 @@ class Status(object):
         result = list(updates.intersection(packages_inducing_reboot))
         return result
 
+    def is_sysv_service(self, service_name):
+        liste = [ line.split("\t" ,1)[0].strip() for line in sh.chkconfig() ]
+        return service_name in liste
+
     def __init__(self, only_config=False):
         self.service_defs = {}
         self.services = {}
@@ -279,32 +284,32 @@ class Status(object):
     @staticmethod
     def get_init_scripts_and_type(service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
+        sysv_exists = os.path.exists(sysv_init_script)
         upstart_init_script = '/etc/init/%s.conf' % service_name
         upstart_override = '/etc/init/%s.override' % service_name
-        sysv_exists = os.path.exists(sysv_init_script)
         upstart_exists = os.path.exists(upstart_init_script)
         override_exists = os.path.exists(upstart_override)
+        # are there other locations for services?
+        systemd_init_script = '/usr/lib/systemd/system/%s.service' % service_name
+        # simplified for a start
+        systemd_override = '/usr/lib/systemd/system/%s@.service' % service_name
+        systemd_exists = os.path.exists(systemd_init_script)
+        systemd_override_exists = os.path.exists(systemd_override)
+        yb = yum.YumBase()
+        yb.doConfigSetup(init_plugins=False)
+        os_release = yb.conf.yumvar['releasever']
 
-        try:
-            chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
-        except Exception:
-            chkconfig_result = None
-        chkconfig_success = True
-        chkconfig_failed = False
-        chkconfig_does_not_exist = None
 
-        if chkconfig_result == chkconfig_success:
+        if Status.is_sysv_service(service_name):
             init_type = "sysv"
-        elif chkconfig_result is chkconfig_does_not_exist:
+        elif os_release == 6:
             if upstart_exists:
                 init_type = "upstart"
-            elif sysv_exists:
-                init_type = "sysv"
             else:
                 init_type = "serverside"
-        elif chkconfig_result == chkconfig_failed:
-            if upstart_exists:
-                init_type = "upstart"
+        elif os_release == 7:
+            if systemd_exists:
+                init_type = "systemd"
             else:
                 init_type = "serverside"
 
