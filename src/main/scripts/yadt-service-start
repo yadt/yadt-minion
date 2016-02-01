@@ -11,22 +11,21 @@ is_already_starting() {
         pgrep -f "(service $SERVICE start|.*sh /etc/rc..d/S..$SERVICE start)" > /dev/null
     elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
         sudo initctl status $SERVICE | grep "start/" | grep -qv "start/running"
+    elif [[ $YADT_INIT_TYPE == "systemd" ]]; then
+        sudo systemctl status $SERVICE | grep -q "Active: activating"
     fi
 }
 
 if ! is_already_starting; then
     echo "starting $SERVICE"
-    if [[ $RELEASEVER == "7"* ]]
-    then
-        sudo systemctl start $SERVICE
-    else
-        if [[ $YADT_INIT_TYPE == "sysv" ]]; then
-            sudo service $SERVICE start
-        elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
-            if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
-                sudo initctl start $SERVICE
-            fi
+    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+        sudo service $SERVICE start
+    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+        if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+            sudo initctl start $SERVICE
         fi
+    elif [[ $YADT_INIT_TYPE == "systemd" ]]; then
+        sudo systemctl start $SERVICE
     fi
     exit
 fi
