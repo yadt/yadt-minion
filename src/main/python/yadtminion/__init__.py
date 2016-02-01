@@ -282,7 +282,7 @@ class Status(object):
                                               'artefacts_filter']]
 
     @staticmethod
-    def get_systemd_init_scripts(service_name)
+    def get_systemd_init_scripts(service_name):
         # are there other locations for services?
         systemd_init_script = '/usr/lib/systemd/system/%s.service' % service_name
         # simplified for a start
