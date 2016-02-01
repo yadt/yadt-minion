@@ -309,7 +309,7 @@ class Status(object):
         override_exists = os.path.exists(upstart_override)
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
-        os_release = floar(yb.conf.yumvar['releasever'])
+        os_release = float(yb.conf.yumvar['releasever'])
 
 
         if Status.is_sysv_service(service_name):
