@@ -318,10 +318,11 @@ class Status(object):
             else:
                 init_type = "serverside"
         elif os_release == "7":
-            if len(get_systemd_init_scripts(service_name)):
+            if len(Status.get_systemd_init_scripts(service_name)):
                 init_type = "systemd"
             else:
                 init_type = "serverside"
+
 
         if init_type == "sysv":
             init_scripts = (sysv_init_script,)
@@ -331,7 +332,7 @@ class Status(object):
             else:
                 init_scripts = (upstart_init_script,)
         elif init_type == "systemd":
-            init_scripts = get_systemd_init_scripts(service_name)
+            init_scripts = Status.get_systemd_init_scripts(service_name)
         else:
             init_scripts = tuple()
 
