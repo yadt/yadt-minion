@@ -58,6 +58,7 @@ def set_properties(project):
     project.depends_on('netifaces')
     project.depends_on('simplejson')
     project.depends_on('pyrpm')
+    project.depends_on('sh')
 
     project.set_property('dir_dist_scripts', 'scripts')
 
