@@ -199,7 +199,8 @@ class Status(object):
         result = list(updates.intersection(packages_inducing_reboot))
         return result
 
-    def is_sysv_service(self, service_name):
+    @staticmethod
+    def is_sysv_service(service_name):
         liste = [ line.split("\t" ,1)[0].strip() for line in sh.chkconfig() ]
         return service_name in liste
 
