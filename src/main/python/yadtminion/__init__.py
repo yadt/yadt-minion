@@ -6,7 +6,6 @@ import socket
 import datetime
 import stat
 import platform
-import sh
 
 import netifaces
 import yaml
@@ -15,6 +14,7 @@ import yadtminion.yaml_merger
 from yadtminion import locking
 import rpm
 from rpmUtils.miscutils import stringToVersion
+from sh import Command
 
 
 class YumDeps(object):
@@ -201,7 +201,8 @@ class Status(object):
 
     @staticmethod
     def is_sysv_service(service_name):
-        liste = [ line.split("\t" ,1)[0].strip() for line in sh.chkconfig() ]
+        chkconfig = Command("/sbin/chkconfig")
+        liste = [ line.split("\t" ,1)[0].strip() for line in chkconfig() ]
         return service_name in liste
 
     def __init__(self, only_config=False):
