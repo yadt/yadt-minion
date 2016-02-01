@@ -314,7 +314,7 @@ class Status(object):
 
         if Status.is_sysv_service(service_name):
             init_type = "sysv"
-        elif os_release >= 6 & os_release < 7:
+        elif os_release >= 6 and os_release < 7:
             if upstart_exists:
                 init_type = "upstart"
             else:
