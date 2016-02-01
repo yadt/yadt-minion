@@ -312,12 +312,12 @@ class Status(object):
 
         if Status.is_sysv_service(service_name):
             init_type = "sysv"
-        elif os_release == 6:
+        elif os_release == "6":
             if upstart_exists:
                 init_type = "upstart"
             else:
                 init_type = "serverside"
-        elif os_release == 7:
+        elif os_release == "7":
             if len(get_systemd_init_scripts(service_name)):
                 init_type = "systemd"
             else:
