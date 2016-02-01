@@ -309,17 +309,17 @@ class Status(object):
         override_exists = os.path.exists(upstart_override)
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
-        os_release = yb.conf.yumvar['releasever']
+        os_release = floar(yb.conf.yumvar['releasever'])
 
 
         if Status.is_sysv_service(service_name):
             init_type = "sysv"
-        elif os_release == "6":
+        elif os_release >= 6 & os_release < 7:
             if upstart_exists:
                 init_type = "upstart"
             else:
                 init_type = "serverside"
-        elif os_release == "7":
+        elif os_release >= 7:
             if len(Status.get_systemd_init_scripts(service_name)):
                 init_type = "systemd"
             else:
