@@ -282,6 +282,22 @@ class Status(object):
                                               'artefacts_filter']]
 
     @staticmethod
+    def get_systemd_init_scripts(service_name)
+        # are there other locations for services?
+        systemd_init_script = '/usr/lib/systemd/system/%s.service' % service_name
+        # simplified for a start
+        systemd_override = '/etc/systemd/system/%s.service' % service_name
+        systemd_exists = os.path.exists(systemd_init_script)
+        systemd_override_exists = os.path.exists(systemd_override)
+        if systemd_override_exists:
+            return (systemd_init_script, systemd_override)
+        elif systemd_exists:
+            return (systemd_init_script,)
+        else:
+            return tuple()
+
+
+    @staticmethod
     def get_init_scripts_and_type(service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
         sysv_exists = os.path.exists(sysv_init_script)
@@ -289,12 +305,6 @@ class Status(object):
         upstart_override = '/etc/init/%s.override' % service_name
         upstart_exists = os.path.exists(upstart_init_script)
         override_exists = os.path.exists(upstart_override)
-        # are there other locations for services?
-        systemd_init_script = '/usr/lib/systemd/system/%s.service' % service_name
-        # simplified for a start
-        systemd_override = '/usr/lib/systemd/system/%s@.service' % service_name
-        systemd_exists = os.path.exists(systemd_init_script)
-        systemd_override_exists = os.path.exists(systemd_override)
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
         os_release = yb.conf.yumvar['releasever']
@@ -308,7 +318,7 @@ class Status(object):
             else:
                 init_type = "serverside"
         elif os_release == 7:
-            if systemd_exists:
+            if len(get_systemd_init_scripts(service_name)):
                 init_type = "systemd"
             else:
                 init_type = "serverside"
@@ -320,6 +330,8 @@ class Status(object):
                 init_scripts = (upstart_init_script, upstart_override)
             else:
                 init_scripts = (upstart_init_script,)
+        elif init_type == "systemd":
+            init_scripts = get_systemd_init_scripts(service_name)
         else:
             init_scripts = tuple()
 
