@@ -16,6 +16,17 @@ import rpm
 from rpmUtils.miscutils import stringToVersion
 from sh import Command
 
+# There is an longstanding bug in python that stdout not handled
+# correctly in a piping context.
+# http://bugs.python.org/issue11380
+import atexit
+@atexit.register
+def closefilehandler():
+    try:
+        sys.stdout.close()
+    except IOError:
+        pass
+
 
 class YumDeps(object):
     NAME_VERSION_SEPARATOR = '/'
