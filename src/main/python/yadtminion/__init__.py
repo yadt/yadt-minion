@@ -321,7 +321,6 @@ class Status(object):
     @staticmethod
     def get_init_scripts_and_type(service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
-        sysv_exists = os.path.exists(sysv_init_script)
         upstart_init_script = '/etc/init/%s.conf' % service_name
         upstart_override = '/etc/init/%s.override' % service_name
         upstart_exists = os.path.exists(upstart_init_script)
