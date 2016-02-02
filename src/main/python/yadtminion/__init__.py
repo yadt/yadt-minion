@@ -206,6 +206,11 @@ class Status(object):
         return service_name in liste
 
     def __init__(self, only_config=False):
+        # Redirect stdout because some yum plugins will print to it and
+        # break the json
+        old_stdout = sys.stdout
+        sys.stdout = os.devnull
+
         self.service_defs = {}
         self.services = {}
 
@@ -284,6 +289,8 @@ class Status(object):
                                               'yumdeps',
                                               'service_defs',
                                               'artefacts_filter']]
+        sys.stdout = old_stdout
+        del old_stdout
 
     @staticmethod
     def get_systemd_init_scripts(service_name):
