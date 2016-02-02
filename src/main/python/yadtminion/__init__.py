@@ -214,6 +214,8 @@ class Status(object):
             return
 
         self.yumbase = yum.YumBase()
+        # As the called script executes the yadt-status.py with sudo,
+        # this will nearly always be True
         is_root = os.geteuid() == 0
         self.yumbase.preconf.init_plugins = is_root
         self.yumbase.preconf.errorlevel = 0
