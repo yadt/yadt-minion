@@ -213,8 +213,8 @@ class Status(object):
     @staticmethod
     def is_sysv_service(service_name):
         chkconfig = Command("/sbin/chkconfig")
-        liste = [ line.split("\t" ,1)[0].strip() for line in chkconfig() ]
-        return service_name in liste
+        sysv_services = [line.split("\t", 1)[0].strip() for line in chkconfig()]
+        return service_name in sysv_services
 
     def __init__(self, only_config=False):
         # Redirect stdout because some yum plugins will print to it and
@@ -318,7 +318,6 @@ class Status(object):
         else:
             return tuple()
 
-
     @staticmethod
     def get_init_scripts_and_type(service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
@@ -330,7 +329,6 @@ class Status(object):
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
         os_release = float(yb.conf.yumvar['releasever'])
-
 
         if Status.is_sysv_service(service_name):
             init_type = "sysv"
@@ -344,7 +342,6 @@ class Status(object):
                 init_type = "systemd"
             else:
                 init_type = "serverside"
-
 
         if init_type == "sysv":
             init_scripts = (sysv_init_script,)
