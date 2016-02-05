@@ -266,27 +266,20 @@ class Status(object):
                 sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
                 sys.exit(1)
         self.yumdeps = YumDeps(self.yumbase)
-
         self.load_defaults_and_settings(only_config=False)
-
         self.setup_services()
         self.add_services_ignore()
         self.add_services_states()
         self.add_services_extra()
-
         self.handled_artefacts = [
             a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
-
         self.current_artefacts = self.yumdeps.requires.keys()
-
         self.next_artefacts = self.updates = {}
         self.yumdeps.load_all_updates()
         for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
             self.updates[a] = self.yumdeps.all_updates[a]
         self.state = 'update_needed' if self.updates else 'uptodate'
-
         self.lockstate = self.get_lock_state()
-
         self.host = self.hostname = socket.gethostname().split('.', 1)[0]
         self.fqdn = socket.getfqdn()
         with open('/proc/uptime', 'r') as f:
