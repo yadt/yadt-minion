@@ -267,8 +267,8 @@ class Status(object):
 
         self.host = self.hostname = socket.gethostname().split('.', 1)[0]
         self.fqdn = socket.getfqdn()
-        f = open('/proc/uptime', 'r')
-        self.uptime = float(f.readline().split()[0])
+        with open('/proc/uptime', 'r') as f:
+            self.uptime = float(f.readline().split()[0])
         self.running_kernel = 'kernel/' + platform.uname()[2]
         self.latest_kernel = self.determine_latest_kernel()
         self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
