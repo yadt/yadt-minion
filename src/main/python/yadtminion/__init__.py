@@ -246,66 +246,67 @@ class Status(object):
         # Redirect stdout because some yum plugins will print to it and
         # break the json
         old_stdout = sys.stdout
-        sys.stdout = open(os.devnull, "w")
+        try:
+            sys.stdout = open(os.devnull, "w")
 
-        self.service_defs = {}
-        self.services = {}
+            self.service_defs = {}
+            self.services = {}
 
-        if only_config:
-            self.load_defaults_and_settings(only_config=True)
-            return
+            if only_config:
+                self.load_defaults_and_settings(only_config=True)
+                return
 
-        # As the called script executes the yadt-status.py with sudo,
-        # this will nearly always be True
-        is_root = os.geteuid() == 0
-        self.yumbase = Status.initialize_yumbase(is_root)
-        if is_root:
-            try:
-                locking.try_to_acquire_yum_lock(self.yumbase)
-            except locking.CannotAcquireYumLockException as e:
-                sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
-                sys.exit(1)
-        self.yumdeps = YumDeps(self.yumbase)
-        self.load_defaults_and_settings(only_config=False)
-        self.setup_services()
-        self.add_services_ignore()
-        self.add_services_states()
-        self.add_services_extra()
-        self.handled_artefacts = [
-            a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
-        self.current_artefacts = self.yumdeps.requires.keys()
-        self.next_artefacts = self.updates = {}
-        self.yumdeps.load_all_updates()
-        for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
-            self.updates[a] = self.yumdeps.all_updates[a]
-        self.state = 'update_needed' if self.updates else 'uptodate'
-        self.lockstate = self.get_lock_state()
-        self.host = self.hostname = socket.gethostname().split('.', 1)[0]
-        self.fqdn = socket.getfqdn()
-        with open('/proc/uptime', 'r') as f:
-            self.uptime = float(f.readline().split()[0])
-        self.running_kernel = 'kernel/' + platform.uname()[2]
-        self.latest_kernel = self.determine_latest_kernel()
-        self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
-                                                          if self.latest_kernel else False)
-        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
-        if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
-            self.ssh_poll_max_seconds = self.settings.get(
-                'ssh_poll_max_seconds')
+            # As the called script executes the yadt-status.py with sudo,
+            # this will nearly always be True
+            is_root = os.geteuid() == 0
+            self.yumbase = Status.initialize_yumbase(is_root)
+            if is_root:
+                try:
+                    locking.try_to_acquire_yum_lock(self.yumbase)
+                except locking.CannotAcquireYumLockException as e:
+                    sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
+                    sys.exit(1)
+            self.yumdeps = YumDeps(self.yumbase)
+            self.load_defaults_and_settings(only_config=False)
+            self.setup_services()
+            self.add_services_ignore()
+            self.add_services_states()
+            self.add_services_extra()
+            self.handled_artefacts = [
+                a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
+            self.current_artefacts = self.yumdeps.requires.keys()
+            self.next_artefacts = self.updates = {}
+            self.yumdeps.load_all_updates()
+            for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
+                self.updates[a] = self.yumdeps.all_updates[a]
+            self.state = 'update_needed' if self.updates else 'uptodate'
+            self.lockstate = self.get_lock_state()
+            self.host = self.hostname = socket.gethostname().split('.', 1)[0]
+            self.fqdn = socket.getfqdn()
+            with open('/proc/uptime', 'r') as f:
+                self.uptime = float(f.readline().split()[0])
+            self.running_kernel = 'kernel/' + platform.uname()[2]
+            self.latest_kernel = self.determine_latest_kernel()
+            self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
+                                                              if self.latest_kernel else False)
+            self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
+            if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
+                self.ssh_poll_max_seconds = self.settings.get(
+                    'ssh_poll_max_seconds')
 
-        now = datetime.datetime.now()
-        self.date = str(now)
-        self.epoch = round(float(now.strftime('%s')))
-        self.interface = Status.setup_interfaces()
-        self.pwd = os.getcwd()
+            now = datetime.datetime.now()
+            self.date = str(now)
+            self.epoch = round(float(now.strftime('%s')))
+            self.interface = Status.setup_interfaces()
+            self.pwd = os.getcwd()
 
-        self.structure_keys = [key for key in self.__dict__.keys()
-                               if key not in ['yumbase',
-                                              'yumdeps',
-                                              'service_defs',
-                                              'artefacts_filter']]
-        sys.stdout = old_stdout
-        del old_stdout
+            self.structure_keys = [key for key in self.__dict__.keys()
+                                   if key not in ['yumbase',
+                                                  'yumdeps',
+                                                  'service_defs',
+                                                  'artefacts_filter']]
+        finally:
+            sys.stdout = old_stdout
 
     @staticmethod
     def get_systemd_init_scripts(service_name):
