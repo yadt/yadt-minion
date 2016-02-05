@@ -213,7 +213,7 @@ class Status(object):
     @staticmethod
     def is_sysv_service(service_name):
         chkconfig = Command("/sbin/chkconfig")
-        sysv_services = [line.split("\t", 1)[0].strip() for line in chkconfig()]
+        sysv_services = [line.split()[0] for line in chkconfig()]
         return service_name in sysv_services
 
     def __init__(self, only_config=False):
