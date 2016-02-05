@@ -226,6 +226,22 @@ class Status(object):
         yumbase.conf.cache = not(is_root)
         return yumbase
 
+    @staticmethod
+    def setup_interfaces():
+        """Return a dict of interfaces with a string of IP adresses"""
+        interfaces = {}
+        for interface in netifaces.interfaces():
+            if interface == 'lo':
+                continue
+            interfaces[interface] = []
+            try:
+                for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+                    interfaces[interface].append(link['addr'])
+            except Exception:
+                pass
+            interfaces[interface] = ' '.join(interfaces[interface])
+        return interfaces
+
     def __init__(self, only_config=False):
         # Redirect stdout because some yum plugins will print to it and
         # break the json
@@ -287,18 +303,7 @@ class Status(object):
         now = datetime.datetime.now()
         self.date = str(now)
         self.epoch = round(float(now.strftime('%s')))
-        self.interface = {}
-        for interface in netifaces.interfaces():
-            if interface == 'lo':
-                continue
-            self.interface[interface] = []
-            try:
-                for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                    self.interface[interface].append(link['addr'])
-            except Exception:
-                pass
-            self.interface[interface] = ' '.join(self.interface[interface])
-
+        self.interface = Status.setup_interfaces()
         self.pwd = os.getcwd()
 
         self.structure_keys = [key for key in self.__dict__.keys()
