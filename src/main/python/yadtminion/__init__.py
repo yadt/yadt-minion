@@ -220,7 +220,7 @@ class Status(object):
         # Redirect stdout because some yum plugins will print to it and
         # break the json
         old_stdout = sys.stdout
-        sys.stdout = os.devnull
+        sys.stdout = open(os.devnull, "w")
 
         self.service_defs = {}
         self.services = {}
