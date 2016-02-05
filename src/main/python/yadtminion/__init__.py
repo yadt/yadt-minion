@@ -216,6 +216,16 @@ class Status(object):
         sysv_services = [line.split()[0] for line in chkconfig()]
         return service_name in sysv_services
 
+    @staticmethod
+    def initialize_yumbase(is_root):
+        """Return initialized yumbase"""
+        yumbase = yum.YumBase()
+        yumbase.preconf.init_plugins = is_root
+        yumbase.preconf.errorlevel = 0
+        yumbase.preconf.debuglevel = 0
+        yumbase.conf.cache = not(is_root)
+        return yumbase
+
     def __init__(self, only_config=False):
         # Redirect stdout because some yum plugins will print to it and
         # break the json
@@ -229,14 +239,10 @@ class Status(object):
             self.load_defaults_and_settings(only_config=True)
             return
 
-        self.yumbase = yum.YumBase()
         # As the called script executes the yadt-status.py with sudo,
         # this will nearly always be True
         is_root = os.geteuid() == 0
-        self.yumbase.preconf.init_plugins = is_root
-        self.yumbase.preconf.errorlevel = 0
-        self.yumbase.preconf.debuglevel = 0
-        self.yumbase.conf.cache = not(is_root)
+        self.yumbase = Status.initialize_yumbase(is_root)
         if is_root:
             try:
                 locking.try_to_acquire_yum_lock(self.yumbase)
