@@ -54,6 +54,7 @@ def set_properties(project):
     import os
 
     project.build_depends_on('mock')
+    project.build_depends_on('unittest2')
     project.depends_on('PyYAML')
     project.depends_on('netifaces')
     project.depends_on('simplejson')

@@ -12,9 +12,11 @@ import yaml
 import yum
 import yadtminion.yaml_merger
 from yadtminion import locking
+from yadtminionutils import (get_files_by_template,
+                             get_systemd_init_scripts,
+                             is_sysv_service)
 import rpm
 from rpmUtils.miscutils import stringToVersion
-from sh import Command
 
 # There is an longstanding bug in python that stdout not handled
 # correctly in a piping context.
@@ -211,12 +213,6 @@ class Status(object):
         return result
 
     @staticmethod
-    def is_sysv_service(service_name):
-        chkconfig = Command("/sbin/chkconfig")
-        sysv_services = [line.split()[0] for line in chkconfig()]
-        return service_name in sysv_services
-
-    @staticmethod
     def initialize_yumbase(is_root):
         """Return initialized yumbase"""
         yumbase = yum.YumBase()
@@ -308,56 +304,34 @@ class Status(object):
         finally:
             sys.stdout = old_stdout
 
-    @staticmethod
-    def get_systemd_init_scripts(service_name):
-        # are there other locations for services?
-        systemd_init_script = '/usr/lib/systemd/system/%s.service' % service_name
-        # simplified for a start
-        systemd_override = '/etc/systemd/system/%s.service' % service_name
-        systemd_exists = os.path.exists(systemd_init_script)
-        systemd_override_exists = os.path.exists(systemd_override)
-        if systemd_override_exists:
-            return (systemd_init_script, systemd_override)
-        elif systemd_exists:
-            return (systemd_init_script,)
-        else:
-            return tuple()
-
-    @staticmethod
-    def get_init_scripts_and_type(service_name):
+    @classmethod
+    def get_init_scripts_and_type(cls, service_name):
         sysv_init_script = '/etc/init.d/%s' % service_name
-        upstart_init_script = '/etc/init/%s.conf' % service_name
-        upstart_override = '/etc/init/%s.override' % service_name
-        upstart_exists = os.path.exists(upstart_init_script)
-        override_exists = os.path.exists(upstart_override)
+        upstart_scripts_temlpates = ['/etc/init/{0}.conf',
+                                     '/etc/init/{0}.override']
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
         os_release = float(yb.conf.yumvar['releasever'])
+        init_scripts = tuple()
 
-        if Status.is_sysv_service(service_name):
+        if is_sysv_service(service_name):
             init_type = "sysv"
+            init_scripts = (sysv_init_script,)
         elif os_release >= 6 and os_release < 7:
-            if upstart_exists:
+            upstart_scripts = get_files_by_template(service_name,
+                                                    upstart_scripts_temlpates)
+            if len(upstart_scripts):
                 init_type = "upstart"
+                init_scripts = upstart_scripts
             else:
                 init_type = "serverside"
         elif os_release >= 7:
-            if len(Status.get_systemd_init_scripts(service_name)):
+            systemd_scripts = get_systemd_init_scripts(service_name)
+            if len(systemd_scripts):
                 init_type = "systemd"
+                init_scripts = systemd_scripts
             else:
                 init_type = "serverside"
-
-        if init_type == "sysv":
-            init_scripts = (sysv_init_script,)
-        elif init_type == "upstart":
-            if override_exists:
-                init_scripts = (upstart_init_script, upstart_override)
-            else:
-                init_scripts = (upstart_init_script,)
-        elif init_type == "systemd":
-            init_scripts = Status.get_systemd_init_scripts(service_name)
-        else:
-            init_scripts = tuple()
 
         return init_scripts, init_type
 
