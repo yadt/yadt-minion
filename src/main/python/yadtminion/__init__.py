@@ -320,14 +320,14 @@ class Status(object):
         elif os_release >= 6 and os_release < 7:
             upstart_scripts = get_files_by_template(service_name,
                                                     upstart_scripts_temlpates)
-            if len(upstart_scripts):
+            if upstart_scripts:
                 init_type = "upstart"
                 init_scripts = upstart_scripts
             else:
                 init_type = "serverside"
         elif os_release >= 7:
             systemd_scripts = get_systemd_init_scripts(service_name)
-            if len(systemd_scripts):
+            if systemd_scripts:
                 init_type = "systemd"
                 init_scripts = systemd_scripts
             else:
