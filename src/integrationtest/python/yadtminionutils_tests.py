@@ -79,6 +79,25 @@ class Test(unittest.TestCase):
         chkconfigmock.assert_called_once_with()
         self.assertFalse(is_sysv_service("noservice"))
 
+    @patch("yadtminionutils.sysv_scripts.Command")
+    def test_is_sysv_service_should_return_correct_value_with_xinetd(self, command):
+        chkconfigmock = Mock()
+        chkconfigmock.return_value = dedent("""
+            service1    	0:off   1:off   2:on    3:on    4:on    5:on    6:off
+            service2    	0:off   1:off   2:on    3:on    4:on    5:on    6:off
+            ser3           	0:off   1:off   2:off   3:on    4:on    5:on    6:off
+            service4    	0:off   1:off   2:on    3:on    4:on    5:on    6:off
+            longservice5	0:off   1:off   2:off   3:on    4:on    5:on    6:off
+            service6    	0:off   1:on    2:on    3:on    4:on    5:on    6:off
+
+            xinetd based services:
+                foobar-server:  on
+            """).strip().split("\n")
+        command.return_value = chkconfigmock
+        self.assertTrue(is_sysv_service("service1"))
+        chkconfigmock.assert_called_once_with()
+        self.assertFalse(is_sysv_service("noservice"))
+
 
 if __name__ == "__main__":
     unittest.main()
