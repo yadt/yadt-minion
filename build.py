@@ -44,7 +44,7 @@ name = 'yadt-minion'
 license = 'GNU GPL v3'
 summary = 'YADT - an Augmented Deployment Tool - The Minion Part'
 url = 'https://github.com/yadt/yadt-minion'
-version = '0.5'
+version = '0.6'
 
 default_task = ['analyze', 'publish']
 
@@ -54,10 +54,12 @@ def set_properties(project):
     import os
 
     project.build_depends_on('mock')
+    project.build_depends_on('unittest2')
     project.depends_on('PyYAML')
     project.depends_on('netifaces')
     project.depends_on('simplejson')
     project.depends_on('pyrpm')
+    project.depends_on('sh')
 
     project.set_property('dir_dist_scripts', 'scripts')
 

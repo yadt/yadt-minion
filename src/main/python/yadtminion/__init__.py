@@ -12,8 +12,22 @@ import yaml
 import yum
 import yadtminion.yaml_merger
 from yadtminion import locking
+from yadtminionutils import (get_files_by_template,
+                             get_systemd_init_scripts,
+                             is_sysv_service)
 import rpm
 from rpmUtils.miscutils import stringToVersion
+
+# There is an longstanding bug in python that stdout not handled
+# correctly in a piping context.
+# http://bugs.python.org/issue11380
+import atexit
+@atexit.register
+def closefilehandler():
+    try:
+        sys.stdout.close()
+    except IOError:
+        pass
 
 
 class YumDeps(object):
@@ -198,125 +212,126 @@ class Status(object):
         result = list(updates.intersection(packages_inducing_reboot))
         return result
 
-    def __init__(self, only_config=False):
-        self.service_defs = {}
-        self.services = {}
+    @staticmethod
+    def initialize_yumbase(is_root):
+        """Return initialized yumbase"""
+        yumbase = yum.YumBase()
+        yumbase.preconf.init_plugins = is_root
+        yumbase.preconf.errorlevel = 0
+        yumbase.preconf.debuglevel = 0
+        yumbase.conf.cache = not(is_root)
+        return yumbase
 
-        if only_config:
-            self.load_defaults_and_settings(only_config=True)
-            return
-
-        self.yumbase = yum.YumBase()
-        is_root = os.geteuid() == 0
-        self.yumbase.preconf.init_plugins = is_root
-        self.yumbase.preconf.errorlevel = 0
-        self.yumbase.preconf.debuglevel = 0
-        self.yumbase.conf.cache = not(is_root)
-        if is_root:
-            try:
-                locking.try_to_acquire_yum_lock(self.yumbase)
-            except locking.CannotAcquireYumLockException as e:
-                sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
-                sys.exit(1)
-        self.yumdeps = YumDeps(self.yumbase)
-
-        self.load_defaults_and_settings(only_config=False)
-
-        self.setup_services()
-        self.add_services_ignore()
-        self.add_services_states()
-        self.add_services_extra()
-
-        self.handled_artefacts = [
-            a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
-
-        self.current_artefacts = self.yumdeps.requires.keys()
-
-        self.next_artefacts = self.updates = {}
-        self.yumdeps.load_all_updates()
-        for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
-            self.updates[a] = self.yumdeps.all_updates[a]
-        self.state = 'update_needed' if self.updates else 'uptodate'
-
-        self.lockstate = self.get_lock_state()
-
-        self.host = self.hostname = socket.gethostname().split('.', 1)[0]
-        self.fqdn = socket.getfqdn()
-        f = open('/proc/uptime', 'r')
-        self.uptime = float(f.readline().split()[0])
-        self.running_kernel = 'kernel/' + platform.uname()[2]
-        self.latest_kernel = self.determine_latest_kernel()
-        self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
-                                                          if self.latest_kernel else False)
-        self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
-        if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
-            self.ssh_poll_max_seconds = self.settings.get(
-                'ssh_poll_max_seconds')
-
-        now = datetime.datetime.now()
-        self.date = str(now)
-        self.epoch = round(float(now.strftime('%s')))
-        self.interface = {}
+    @staticmethod
+    def setup_interfaces():
+        """Return a dict of interfaces with a string of IP adresses"""
+        interfaces = {}
         for interface in netifaces.interfaces():
             if interface == 'lo':
                 continue
-            self.interface[interface] = []
+            interfaces[interface] = []
             try:
                 for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-                    self.interface[interface].append(link['addr'])
+                    interfaces[interface].append(link['addr'])
             except Exception:
                 pass
-            self.interface[interface] = ' '.join(self.interface[interface])
+            interfaces[interface] = ' '.join(interfaces[interface])
+        return interfaces
 
-        self.pwd = os.getcwd()
-
-        self.structure_keys = [key for key in self.__dict__.keys()
-                               if key not in ['yumbase',
-                                              'yumdeps',
-                                              'service_defs',
-                                              'artefacts_filter']]
-
-    @staticmethod
-    def get_init_scripts_and_type(service_name):
-        sysv_init_script = '/etc/init.d/%s' % service_name
-        upstart_init_script = '/etc/init/%s.conf' % service_name
-        upstart_override = '/etc/init/%s.override' % service_name
-        sysv_exists = os.path.exists(sysv_init_script)
-        upstart_exists = os.path.exists(upstart_init_script)
-        override_exists = os.path.exists(upstart_override)
-
+    def __init__(self, only_config=False):
+        # Redirect stdout because some yum plugins will print to it and
+        # break the json
+        old_stdout = sys.stdout
         try:
-            chkconfig_result = subprocess.call(['chkconfig', service_name]) == 0
-        except Exception:
-            chkconfig_result = None
-        chkconfig_success = True
-        chkconfig_failed = False
-        chkconfig_does_not_exist = None
+            sys.stdout = open(os.devnull, "w")
 
-        if chkconfig_result == chkconfig_success:
+            self.service_defs = {}
+            self.services = {}
+
+            if only_config:
+                self.load_defaults_and_settings(only_config=True)
+                return
+
+            # As the called script executes the yadt-status.py with sudo,
+            # this will nearly always be True
+            is_root = os.geteuid() == 0
+            self.yumbase = Status.initialize_yumbase(is_root)
+            if is_root:
+                try:
+                    locking.try_to_acquire_yum_lock(self.yumbase)
+                except locking.CannotAcquireYumLockException as e:
+                    sys.stderr.write("Could not acquire yum lock : '%s'" % str(e))
+                    sys.exit(1)
+            self.yumdeps = YumDeps(self.yumbase)
+            self.load_defaults_and_settings(only_config=False)
+            self.setup_services()
+            self.add_services_ignore()
+            self.add_services_states()
+            self.add_services_extra()
+            self.handled_artefacts = [
+                a for a in filter(self.artefacts_filter, self.yumdeps.requires.keys())]
+            self.current_artefacts = self.yumdeps.requires.keys()
+            self.next_artefacts = self.updates = {}
+            self.yumdeps.load_all_updates()
+            for a in filter(self.artefacts_filter, self.yumdeps.all_updates.keys()):
+                self.updates[a] = self.yumdeps.all_updates[a]
+            self.state = 'update_needed' if self.updates else 'uptodate'
+            self.lockstate = self.get_lock_state()
+            self.host = self.hostname = socket.gethostname().split('.', 1)[0]
+            self.fqdn = socket.getfqdn()
+            with open('/proc/uptime', 'r') as f:
+                self.uptime = float(f.readline().split()[0])
+            self.running_kernel = 'kernel/' + platform.uname()[2]
+            self.latest_kernel = self.determine_latest_kernel()
+            self.reboot_required_to_activate_latest_kernel = (self.running_kernel != self.latest_kernel
+                                                              if self.latest_kernel else False)
+            self.reboot_required_after_next_update = self.next_artefacts_need_reboot()
+            if hasattr(self, 'settings') and self.settings.get('ssh_poll_max_seconds'):
+                self.ssh_poll_max_seconds = self.settings.get(
+                    'ssh_poll_max_seconds')
+
+            now = datetime.datetime.now()
+            self.date = str(now)
+            self.epoch = round(float(now.strftime('%s')))
+            self.interface = Status.setup_interfaces()
+            self.pwd = os.getcwd()
+
+            self.structure_keys = [key for key in self.__dict__.keys()
+                                   if key not in ['yumbase',
+                                                  'yumdeps',
+                                                  'service_defs',
+                                                  'artefacts_filter']]
+        finally:
+            sys.stdout = old_stdout
+
+    @classmethod
+    def get_init_scripts_and_type(cls, service_name):
+        sysv_init_script = '/etc/init.d/%s' % service_name
+        upstart_scripts_temlpates = ['/etc/init/{0}.conf',
+                                     '/etc/init/{0}.override']
+        yb = yum.YumBase()
+        yb.doConfigSetup(init_plugins=False)
+        os_release = float(yb.conf.yumvar['releasever'])
+        init_scripts = tuple()
+
+        if is_sysv_service(service_name):
             init_type = "sysv"
-        elif chkconfig_result is chkconfig_does_not_exist:
-            if upstart_exists:
-                init_type = "upstart"
-            elif sysv_exists:
-                init_type = "sysv"
-            else:
-                init_type = "serverside"
-        elif chkconfig_result == chkconfig_failed:
-            if upstart_exists:
-                init_type = "upstart"
-            else:
-                init_type = "serverside"
-
-        if init_type == "sysv":
             init_scripts = (sysv_init_script,)
-        elif init_type == "upstart":
-            if override_exists:
-                init_scripts = (upstart_init_script, upstart_override)
+        elif os_release >= 6 and os_release < 7:
+            upstart_scripts = get_files_by_template(service_name,
+                                                    upstart_scripts_temlpates)
+            if upstart_scripts:
+                init_type = "upstart"
+                init_scripts = upstart_scripts
             else:
-                init_scripts = (upstart_init_script,)
-        else:
-            init_scripts = tuple()
+                init_type = "serverside"
+        elif os_release >= 7:
+            systemd_scripts = get_systemd_init_scripts(service_name)
+            if systemd_scripts:
+                init_type = "systemd"
+                init_scripts = systemd_scripts
+            else:
+                init_type = "serverside"
 
         return init_scripts, init_type
 

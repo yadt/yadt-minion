@@ -3,15 +3,13 @@ set -e -E -C -u -o pipefail
 
 export SERVICE=${1:?no YADT_SERVICE specified}
 
-if [[ $RELEASEVER == "7"* ]]; then
-    sudo systemctl status $SERVICE
-else
-    eval $(yadt-service-init-type $SERVICE)
-    if [[ $YADT_INIT_TYPE == "sysv" ]]; then
-        sudo service $SERVICE status
-    elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
-        if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
-            exit 3
-        fi
+eval $(yadt-service-init-type $SERVICE)
+if [[ $YADT_INIT_TYPE == "sysv" ]]; then
+    sudo service $SERVICE status
+elif [[ $YADT_INIT_TYPE == "upstart" ]]; then
+    if sudo initctl status $SERVICE | grep -q "stop/waiting"; then
+        exit 3
     fi
+elif [[ $YADT_INIT_TYPE == "systemd" ]]; then
+    sudo systemctl status $SERVICE >/dev/null
 fi
