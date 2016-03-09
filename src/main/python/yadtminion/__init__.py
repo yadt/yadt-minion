@@ -14,7 +14,8 @@ import yadtminion.yaml_merger
 from yadtminion import locking
 from yadtminionutils import (get_files_by_template,
                              get_systemd_init_scripts,
-                             is_sysv_service)
+                             is_sysv_service,
+                             could_be_sysv_service)
 import rpm
 from rpmUtils.miscutils import stringToVersion
 
@@ -323,6 +324,9 @@ class Status(object):
             if upstart_scripts:
                 init_type = "upstart"
                 init_scripts = upstart_scripts
+            elif could_be_sysv_service(service_name):
+                init_type = "sysv"
+                init_scripts = (sysv_init_script,)
             else:
                 init_type = "serverside"
         elif os_release >= 7:
@@ -330,6 +334,9 @@ class Status(object):
             if systemd_scripts:
                 init_type = "systemd"
                 init_scripts = systemd_scripts
+            elif could_be_sysv_service(service_name):
+                init_type = "sysv"
+                init_scripts = (sysv_init_script,)
             else:
                 init_type = "serverside"
 

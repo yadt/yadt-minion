@@ -1,7 +1,9 @@
 from yadtminionutils import (get_files_by_template,
                              get_systemd_overrides,
-                             is_sysv_service)
+                             is_sysv_service,
+                             could_be_sysv_service)
 import os
+import shutil
 from textwrap import dedent
 
 import unittest2 as unittest
@@ -97,6 +99,24 @@ class Test(unittest.TestCase):
         self.assertTrue(is_sysv_service("service1"))
         chkconfigmock.assert_called_once_with()
         self.assertFalse(is_sysv_service("noservice"))
+
+    def test_could_be_sysv_service(self):
+        service_name = "foo"
+        tempdir = mkdtemp()
+        script_path = os.path.join(tempdir, service_name)
+        try:
+            with patch("yadtminionutils.sysv_scripts.SYSV_SCRIPT_LOCATION", new=tempdir):
+                self.assertEqual(could_be_sysv_service("foo"), False)
+
+                open(script_path, "w").close()
+
+                # File is not executable, so still expect False.
+                self.assertEqual(could_be_sysv_service("foo"), False)
+
+                os.chmod(script_path, 0755)
+                self.assertEqual(could_be_sysv_service("foo"), True)
+        finally:
+            shutil.rmtree(tempdir)
 
 
 if __name__ == "__main__":
