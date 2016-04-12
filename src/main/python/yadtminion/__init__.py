@@ -313,7 +313,7 @@ class Status(object):
                                      '/etc/init/{0}.override']
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
-        os_release = get_yum_releasever(yb)
+        os_release = float(get_yum_releasever(yb))
         init_scripts = tuple()
 
         if is_sysv_service(service_name):

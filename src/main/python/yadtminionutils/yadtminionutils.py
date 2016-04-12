@@ -17,5 +17,5 @@ def get_yum_releasever(yumbase=None):
         yumbase = YumBase()
         yumbase.doConfigSetup(init_plugins=False)
     yum_releaseversion = yumbase.conf.yumvar['releasever']
-    releasever = float(yum_releaseversion.lower().replace('server', ''))
+    releasever = yum_releaseversion.lower().replace('server', '')
     return releasever
