@@ -15,7 +15,8 @@ from yadtminion import locking
 from yadtminionutils import (get_files_by_template,
                              get_systemd_init_scripts,
                              is_sysv_service,
-                             could_be_sysv_service)
+                             could_be_sysv_service,
+                             get_yum_releasever)
 import rpm
 from rpmUtils.miscutils import stringToVersion
 
@@ -312,7 +313,7 @@ class Status(object):
                                      '/etc/init/{0}.override']
         yb = yum.YumBase()
         yb.doConfigSetup(init_plugins=False)
-        os_release = float(yb.conf.yumvar['releasever'])
+        os_release = get_yum_releasever(yb)
         init_scripts = tuple()
 
         if is_sysv_service(service_name):

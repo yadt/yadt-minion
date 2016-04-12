@@ -5,9 +5,9 @@ import subprocess
 import sys
 import select
 import errno
-import yum
 
 from yadtminion.configuration import load_yadt_defaults
+from yadtminionutils import get_yum_releasever
 
 
 def flush(froom, tos):
@@ -22,12 +22,6 @@ def tee(line, tos):
     for to in tos:
         to.write(line)
         to.flush()
-
-
-def get_yum_releasever():
-    yb = yum.YumBase()
-    yb.doConfigSetup(init_plugins=False)
-    return yb.conf.yumvar['releasever']
 
 
 def cmd(args):
