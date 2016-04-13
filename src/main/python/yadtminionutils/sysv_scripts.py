@@ -1,15 +1,16 @@
 import os
 import stat
-
-from sh import Command
+import subprocess
 
 SYSV_SCRIPT_LOCATION = "/etc/init.d"
 
+def get_chkconfig_output():
+    return subprocess.Popen(["/sbin/chkconfig"], stdout=subprocess.PIPE).communicate()[0]
 
 def is_sysv_service(service_name):
-    chkconfig = Command("/sbin/chkconfig")
+    chkconfig_output = get_chkconfig_output()
     sysv_services = []
-    for line in chkconfig():
+    for line in chkconfig_output.split("/n"):
         line = line.strip()
         if not line:
             # Empty line is the start of the "xinetd based services" section.
