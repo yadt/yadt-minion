@@ -6,8 +6,11 @@ SYSV_SCRIPT_LOCATION = "/etc/init.d"
 
 
 def get_chkconfig_output():
-    return subprocess.Popen(["/sbin/chkconfig"],
-                            stdout=subprocess.PIPE).communicate()[0]
+    with open(os.devnull, 'w') as devnull:
+        return subprocess.Popen(["/sbin/chkconfig"],
+                                stdout=subprocess.PIPE,
+                                stderr=devnull,
+                                ).communicate()[0]
 
 
 def is_sysv_service(service_name):
